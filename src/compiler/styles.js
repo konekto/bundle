@@ -15,36 +15,33 @@ const stylusConfig = {
   // import: ['./styles/index.styl'],
   use: [
 
-    function () {
+    function (style) {
 
-      return (style) => {
+      const {options} = style;
+      const {filename} = options;
+      const {dir: fileDir} = path.parse(filename);
 
-        const {options} = style;
-        const {filename} = options;
-        const {dir} = path.parse(filename);
+      const deps = dependencyTree.toList({
+        filename: path.resolve(fileDir, 'index.jsx'),
+        directory: './',
+        filter: path => path.indexOf('node_modules') === -1
+      })
 
-        const deps = dependencyTree.toList({
-          filename: path.resolve(dir, 'index.jsx'),
-          directory: './',
-          filter: path => path.indexOf('node_modules') === -1
+      deps.slice(0, -1)
+        .forEach((dep) => {
+
+          const {dir: depDir} = path.parse(dep);
+          const stylePath = path.resolve(depDir, 'styles.styl');
+
+          if (!fs.existsSync(stylePath)) return;
+
+          style.import(path.relative(fileDir, stylePath));
         })
 
-        deps.slice(0, -1)
-          .forEach((dep) => {
+      style.define('file-exist', (p) => {
 
-            const {dir} = path.parse(dep);
-            const stylePath = path.resolve(dir, 'styles.styl');
-
-            if (!fs.existsSync(stylePath)) return;
-
-            style.import(stylePath);
-          })
-
-        style.define('file-exist', (p) => {
-
-          return fs.existsSync(p.val);
-        })
-      };
+        return fs.existsSync(path.relative(fileDir, p.val));
+      })
     }
   ]
 }
@@ -57,37 +54,37 @@ module.exports = function compileStyles(options) {
 
     source = path.resolve(cwd, source);
 
-    const files = glob.hasMagic(source) ? glob.sync(source): [source];
+    const files = glob.hasMagic(source) ? glob.sync(source) : [source];
 
-    return Promise.map(files, (file)=> {
+    return Promise.map(files, (file) => {
 
       const {dir, name} = path.parse(file);
       const relative = path.relative(cwd, dir);
       const key = (relative ? './' + relative : '.') + '/' + name + '.css';
       const dest = path.resolve(destination, key);
 
-      console.log(file, key, dest);
-
       return compile(file, dest);
     })
   })
 }
 
-function compile(source, dest, options) {
+function compile(source, dest, opts = {}) {
 
-  options = Object.assign({}, stylusConfig, {filename: source});
+  const options = Object.assign({}, stylusConfig, opts);
 
   return fs.readFileAsync(source, 'utf8')
     .then((content) => {
 
       const s = stylus(content);
 
+      s.set('filename', source);
+
       Object.keys(options)
         .forEach((key) => {
 
           const value = options[key];
 
-          if(key === 'use' || key === 'import') {
+          if (key === 'use' || key === 'import') {
 
             value.forEach((v) => s[key](v));
             return;
@@ -99,7 +96,7 @@ function compile(source, dest, options) {
       return new Promise((resolve, reject) => {
         s.render((err, content) => {
 
-          if(err) return reject(err);
+          if (err) return reject(err);
 
           const {dir} = path.parse(dest);
 

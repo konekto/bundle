@@ -82,5 +82,38 @@ describe('compiler specs', function() {
         })
         .catch(done)
     })
+
+    it('should compile a glob', function(done) {
+
+      compileStyles({
+        sources: ['./**/*.styl'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(()=> {
+
+          assert(fs.existsSync('./test/tmp/test.css'));
+          assert(fs.existsSync('./test/tmp/parent/styles.css'));
+          assert(fs.existsSync('./test/tmp/child/styles.css'));
+          done()
+        })
+        .catch(done)
+    })
+
+    it('should include child component styles', (done)=> {
+
+       compileStyles({
+        sources: ['./parent/styles.styl'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(()=> {
+
+          assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/styles.css')))
+
+          done()
+        })
+        .catch(done)
+    })
   })
 })
