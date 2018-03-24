@@ -1,4 +1,4 @@
-const {compileScripts} = require('../src/compiler');
+const {compileScripts, compileStyles} = require('../src/compiler');
 const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
@@ -9,14 +9,14 @@ const exec = promisify(cp.exec);
 
 describe('compiler specs', function() {
 
-  describe('scripts', function() {
-
-    beforeEach((done)=> {
+   beforeEach((done)=> {
 
       exec('rm -rf ./test/tmp')
         .then(()=> done())
         .catch(done)
     })
+
+  describe('scripts', function() {
 
     it('should compile a jsx file', function(done) {
 
@@ -63,6 +63,24 @@ describe('compiler specs', function() {
            done();
          })
          .catch(done)
+    })
+  })
+
+  describe.only('styles', function() {
+
+    it('should compile a .styl file', function(done) {
+
+      compileStyles({
+        sources: ['./test.styl'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(()=> {
+
+          assert(fs.existsSync('./test/tmp/test.css'));
+          done()
+        })
+        .catch(done)
     })
   })
 })

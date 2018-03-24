@@ -2,5 +2,6 @@
 
 module.exports = {
 
-  compileScripts: require('./scripts')
+  compileScripts: require('./scripts'),
+  compileStyles: require('./styles')
 }

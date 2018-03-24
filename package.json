@@ -15,7 +15,10 @@
     "@babel/preset-env": "^7.0.0-beta.42",
     "@babel/preset-react": "^7.0.0-beta.42",
     "babel-loader": "^8.0.0-beta.2",
+    "dependency-tree": "^6.0.1",
     "glob": "^7.1.2",
+    "mkdirp": "^0.5.1",
+    "stylus": "^0.54.5",
     "webpack": "^4.2.0"
   },
   "devDependencies": {

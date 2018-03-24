@@ -34,7 +34,6 @@ module.exports = function compileScripts(options) {
 
   sources.forEach((source) => {
 
-    // TODO remove the sync
     source = path.resolve(cwd, source);
 
     const files = glob.hasMagic(source) ? glob.sync(source): [source];
