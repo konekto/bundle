@@ -12,7 +12,6 @@ const stylusConfig = {
   paths: [
     './node_modules',
   ],
-  // import: ['./styles/index.styl'],
   use: [
 
     function (style) {
@@ -48,7 +47,7 @@ const stylusConfig = {
 
 module.exports = function compileStyles(options) {
 
-  let {sources, destination, cwd, watch} = options;
+  let {sources, destination, cwd, includes, watch} = options;
 
   return Promise.map(sources, (source) => {
 
@@ -63,7 +62,7 @@ module.exports = function compileStyles(options) {
       const key = (relative ? './' + relative : '.') + '/' + name + '.css';
       const dest = path.resolve(destination, key);
 
-      return compile(file, dest);
+      return compile(file, dest, {import: includes});
     })
   })
 }
@@ -77,12 +76,15 @@ function compile(source, dest, opts = {}) {
 
       const s = stylus(content);
 
+      // set the filename first
       s.set('filename', source);
 
       Object.keys(options)
         .forEach((key) => {
 
           const value = options[key];
+
+          if(!value) return;
 
           if (key === 'use' || key === 'import') {
 

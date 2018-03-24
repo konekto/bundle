@@ -115,5 +115,22 @@ describe('compiler specs', function() {
         })
         .catch(done)
     })
+
+    it('should inlude base styles', (done)=> {
+
+      compileStyles({
+
+        includes: ['./vars.styl'],
+        sources: ['./main.styl'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(()=> {
+
+          assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css')))
+          done();
+        })
+        .catch(done)
+    })
   })
 })
