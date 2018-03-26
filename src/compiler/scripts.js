@@ -26,7 +26,7 @@ const webpackConfig = {
 
 module.exports = function compileScripts(options) {
 
-  let {sources, destination, cwd, watch} = options;
+  let {sources, destination, cwd, watch, log} = options;
 
   cwd = path.resolve(cwd);
 
@@ -49,7 +49,6 @@ module.exports = function compileScripts(options) {
 
   const config = Object.assign({}, webpackConfig, {
 
-    watch,
     entry: entries,
     output: {
       path: path.resolve(destination),
@@ -57,22 +56,45 @@ module.exports = function compileScripts(options) {
     }
   })
 
+  let watching;
+  let taskFn;
+
   const instance = webpack(config);
 
-  const run = Promise.promisify(instance.run.bind(instance));
+  if (watch) {
 
-  return run()
+    taskFn = (cb)=> {
+
+      watching = instance.watch({}, cb);
+    };
+
+  } else {
+
+    taskFn = instance.run.bind(instance);
+  }
+
+  const fnPromise = Promise.promisify(taskFn);
+
+  return fnPromise()
     .then((stats) => {
 
-      console.log(stats.toString({colors: true}));
+      if(log) {
 
-      if (stats.hasErrors()) {
+        console.log(stats.toString({colors: true}));
 
-        console.error(stats.errors);
+        if (stats.hasErrors()) {
+
+          console.error(stats.errors);
+        }
       }
 
 
       instance.stats = stats;
+
+      if(watching) {
+
+        instance.close = Promise.promisify((cb)=> watching.close(cb));
+      }
 
       return instance;
     })

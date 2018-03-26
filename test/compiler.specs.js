@@ -1,72 +1,107 @@
 const {compileScripts, compileStyles} = require('../src/compiler');
-const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
 const cp= require('child_process');
-const {promisify} = require('bluebird');
+const Promise = require('bluebird');
 
-const exec = promisify(cp.exec);
+const exec = Promise.promisify(cp.exec);
 
 describe('compiler specs', function() {
 
-   beforeEach((done)=> {
+  beforeEach((done)=> {
 
-      exec('rm -rf ./test/tmp')
-        .then(()=> done())
-        .catch(done)
-    })
+    exec('rm -rf ./test/tmp')
+      .then(()=> done())
+      .catch(done)
+  })
 
   describe('scripts', function() {
 
     it('should compile a jsx file', function(done) {
 
-       compileScripts({
-         sources: ['./test.jsx'],
-         destination: './test/tmp',
-         cwd: './test/stubs'
-       })
-         .then(() => {
+      compileScripts({
+        sources: ['./test.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(() => {
 
-           assert(fs.existsSync('./test/tmp/test.js'))
-           done();
-         })
-         .catch(done)
+          assert(fs.existsSync('./test/tmp/test.js'))
+          done();
+        })
+        .catch(done)
     });
 
     it('should use the client loader', function(done) {
 
       compileScripts({
-         sources: ['./parent/index.jsx'],
-         destination: './test/tmp',
-         cwd: './test/stubs'
-       })
-         .then(() => {
+        sources: ['./parent/index.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(() => {
 
-           assert(fs.existsSync('./test/tmp/parent/index.js'))
-           done();
-         })
-         .catch(done)
+          assert(fs.existsSync('./test/tmp/parent/index.js'))
+          done();
+        })
+        .catch(done)
     })
 
     it('should compile using globbing', function(done) {
 
       compileScripts({
-         sources: ['./**/*.jsx'],
-         destination: './test/tmp',
-         cwd: './test/stubs'
-       })
-         .then(() => {
+        sources: ['./**/*.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(() => {
 
-           assert(fs.existsSync('./test/tmp/parent/index.js'));
-           assert(fs.existsSync('./test/tmp/child/index.js'));
-           assert(fs.existsSync('./test/tmp/test.js'));
-           done();
-         })
-         .catch(done)
+          assert(fs.existsSync('./test/tmp/parent/index.js'));
+          assert(fs.existsSync('./test/tmp/child/index.js'));
+          assert(fs.existsSync('./test/tmp/test.js'));
+          done();
+        })
+        .catch(done)
+    })
+
+    it('should watch files for changes', function(done) {
+
+      compileScripts({
+        watch: true,
+        sources: ['./*.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then((instance)=> {
+
+          assert(fs.existsSync('./test/tmp/test.js'));
+
+          replaceInFile('./test/stubs/test.jsx', 'test', 'changed');
+
+          return timeout(1000)
+            .then(()=> {
+
+              assert(/changed/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
+
+              replaceInFile('./test/stubs/test.jsx', 'changed', 'test');
+
+              return timeout(1000)
+                .then(()=> {
+
+                  assert(/test/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
+
+                  return instance.close();
+                })
+
+            })
+        })
+        .then(()=> done())
+        .catch(done)
+
     })
   })
 
-  describe.only('styles', function() {
+  describe('styles', function() {
 
     it('should compile a .styl file', function(done) {
 
@@ -102,7 +137,7 @@ describe('compiler specs', function() {
 
     it('should include child component styles', (done)=> {
 
-       compileStyles({
+      compileStyles({
         sources: ['./parent/styles.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
@@ -134,3 +169,16 @@ describe('compiler specs', function() {
     })
   })
 })
+
+
+function replaceInFile(file, from, to) {
+
+  const content = fs.readFileSync(file, 'utf8');
+
+  fs.writeFileSync(file, content.replace(from, to));
+}
+
+function timeout(delay) {
+
+  return Promise.resolve().timeout(delay);
+}
