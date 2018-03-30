@@ -8,6 +8,8 @@ const exec = Promise.promisify(cp.exec);
 
 describe('compiler specs', function() {
 
+  this.timeout(4000);
+
   beforeEach((done)=> {
 
     exec('rm -rf ./test/tmp')
@@ -35,6 +37,7 @@ describe('compiler specs', function() {
     it('should use the client loader', function(done) {
 
       compileScripts({
+        loader: true,
         sources: ['./parent/index.jsx'],
         destination: './test/tmp',
         cwd: './test/stubs'
@@ -67,6 +70,7 @@ describe('compiler specs', function() {
     it('should watch files for changes', function(done) {
 
       compileScripts({
+        loader: true,
         watch: true,
         sources: ['./*.jsx'],
         destination: './test/tmp',
@@ -74,30 +78,24 @@ describe('compiler specs', function() {
       })
         .then((instance)=> {
 
+          const close = instance.close.bind(instance);
+
           assert(fs.existsSync('./test/tmp/test.js'));
 
-          replaceInFile('./test/stubs/test.jsx', 'test', 'changed');
-
-          return timeout(1000)
+          return replaceInFile('./test/stubs/test.jsx', 'test', 'changed')
             .then(()=> {
 
               assert(/changed/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
 
-              replaceInFile('./test/stubs/test.jsx', 'changed', 'test');
-
-              return timeout(1000)
-                .then(()=> {
-
-                  assert(/test/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
-
-                  return instance.close();
-                })
-
+              return replaceInFile('./test/stubs/test.jsx', 'changed', 'test')
             })
-        })
-        .then(()=> done())
-        .catch(done)
+            .then(()=> {
 
+              assert(/test/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')))
+            })
+            .then(close, close)
+        })
+        .then(()=> done(), done)
     })
   })
 
@@ -135,9 +133,10 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should include child component styles', (done)=> {
+    it('should use the styles loader', (done)=> {
 
       compileStyles({
+        loader: true,
         sources: ['./parent/styles.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
@@ -167,6 +166,42 @@ describe('compiler specs', function() {
         })
         .catch(done)
     })
+
+    it('should watch files for changes', function(done) {
+
+
+
+      compileStyles({
+
+        loader: true,
+        watch: true,
+        includes: ['./vars.styl'],
+        sources: ['./main.styl'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then((instance)=> {
+
+          assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
+
+          return replaceInFile('./test/stubs/vars.styl', 'red', 'blue')
+            .then(() => {
+
+              assert(/#00f/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
+
+              return replaceInFile('./test/stubs/vars.styl', 'blue', 'red')
+            })
+            .then(() => {
+
+              assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
+
+            })
+            .then(()=> instance.close(), ()=> instance.close())
+        })
+        .then(()=> done())
+        .catch(done)
+
+    })
   })
 })
 
@@ -176,9 +211,14 @@ function replaceInFile(file, from, to) {
   const content = fs.readFileSync(file, 'utf8');
 
   fs.writeFileSync(file, content.replace(from, to));
+
+  return timeout(1000);
 }
 
 function timeout(delay) {
 
-  return Promise.resolve().timeout(delay);
+  return new Promise((resolve)=> {
+
+    setTimeout(()=> resolve(), delay)
+  });
 }

@@ -5,6 +5,7 @@ const glob = require('glob');
 const Promise = require('bluebird');
 const fs = Promise.promisifyAll(require('fs'));
 const mkdirp = Promise.promisify(require('mkdirp'));
+const watcher = require('../watcher');
 
 const stylusConfig = {
 
@@ -13,41 +14,46 @@ const stylusConfig = {
     './node_modules',
   ],
   use: [
-
-    function (style) {
-
-      const {options} = style;
-      const {filename} = options;
-      const {dir: fileDir} = path.parse(filename);
-
-      const deps = dependencyTree.toList({
-        filename: path.resolve(fileDir, 'index.jsx'),
-        directory: './',
-        filter: path => path.indexOf('node_modules') === -1
-      })
-
-      deps.slice(0, -1)
-        .forEach((dep) => {
-
-          const {dir: depDir} = path.parse(dep);
-          const stylePath = path.resolve(depDir, 'styles.styl');
-
-          if (!fs.existsSync(stylePath)) return;
-
-          style.import(path.relative(fileDir, stylePath));
-        })
-
-      style.define('file-exist', (p) => {
-
-        return fs.existsSync(path.relative(fileDir, p.val));
-      })
-    }
+    fileExist
   ]
 }
 
 module.exports = function compileStyles(options) {
 
-  let {sources, destination, cwd, includes, watch} = options;
+  let {sources, cwd, includes, loader, watch, log} = options;
+
+  includes = includes || [];
+
+  return compileSources(options)
+    .then(()=> {
+
+      if(!watch) return;
+
+      const sourcesToWatch = sources.concat(includes);
+      const mappedInclude = includes.map((s)=> path.resolve(cwd, s));
+      const mappedSources = sourcesToWatch.map((s)=> path.resolve(cwd, s));
+
+      return watcher(mappedSources, (file) => {
+
+        if (log) {
+
+          console.log('change detected', file);
+        }
+
+        // the included file has chnaged
+        if(mappedInclude.indexOf(file) > - 1) {
+
+          return compileSources(options);
+        }
+
+        compile(file, options);
+      });
+    })
+}
+
+function compileSources(options) {
+
+  const {sources, cwd} = options;
 
   return Promise.map(sources, (source) => {
 
@@ -55,21 +61,30 @@ module.exports = function compileStyles(options) {
 
     const files = glob.hasMagic(source) ? glob.sync(source) : [source];
 
-    return Promise.map(files, (file) => {
-
-      const {dir, name} = path.parse(file);
-      const relative = path.relative(cwd, dir);
-      const key = (relative ? './' + relative : '.') + '/' + name + '.css';
-      const dest = path.resolve(destination, key);
-
-      return compile(file, dest, {import: includes});
-    })
+    return Promise.map(files, (file) => compile(file, options))
   })
 }
 
-function compile(source, dest, opts = {}) {
+function getDestination(file, options) {
 
-  const options = Object.assign({}, stylusConfig, opts);
+  let {destination, cwd} = options;
+
+  const {dir, name} = path.parse(file);
+  const relative = path.relative(cwd, dir);
+  const key = (relative ? './' + relative : '.') + '/' + name + '.css';
+  return path.resolve(destination, key);
+}
+
+function compile(source, options) {
+
+  const dest = getDestination(source, options);
+  const stylusOptions = Object.assign({}, stylusConfig, {import: options.includes});
+
+  // add loader
+  if (options.loader) {
+
+    stylusOptions.use.unshift(loader);
+  }
 
   return fs.readFileAsync(source, 'utf8')
     .then((content) => {
@@ -79,10 +94,10 @@ function compile(source, dest, opts = {}) {
       // set the filename first
       s.set('filename', source);
 
-      Object.keys(options)
+      Object.keys(stylusOptions)
         .forEach((key) => {
 
-          const value = options[key];
+          const value = stylusOptions[key];
 
           if(!value) return;
 
@@ -104,11 +119,53 @@ function compile(source, dest, opts = {}) {
 
           return mkdirp(dir)
             .then(() => fs.writeFileAsync(dest, content))
+            .then(()=> {
+
+              if (options.log) {
+
+                console.log(`${dest} created!`)
+              }
+            })
             .then(resolve)
             .catch(reject)
         })
       })
     })
+}
 
 
+function loader (style) {
+
+  const {options} = style;
+  const {filename} = options;
+  const {dir: fileDir} = path.parse(filename);
+
+  const deps = dependencyTree.toList({
+    filename: path.resolve(fileDir, 'index.jsx'),
+    directory: './',
+    filter: path => path.indexOf('node_modules') === -1
+  })
+
+  deps.slice(0, -1)
+    .forEach((dep) => {
+
+      const {dir: depDir} = path.parse(dep);
+      const stylePath = path.resolve(depDir, 'styles.styl');
+
+      if (!fs.existsSync(stylePath)) return;
+
+      style.import(path.relative(fileDir, stylePath));
+    })
+}
+
+function fileExist(style) {
+
+  const {options} = style;
+  const {filename} = options;
+  const {dir} = path.parse(filename);
+
+  style.define('file-exist', (p) => {
+
+    return fs.existsSync(path.relative(dir, p.val));
+  })
 }

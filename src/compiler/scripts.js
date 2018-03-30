@@ -3,6 +3,11 @@ const webpack = require('webpack');
 const glob = require('glob');
 const Promise = require('bluebird');
 
+const loaderRule = {
+  test: /index\.jsx$/,
+  exclude: /node_modules/,
+  loader: path.resolve(__dirname, './loaders/client.js')
+};
 
 const webpackConfig = {
 
@@ -11,11 +16,6 @@ const webpackConfig = {
   devtool: 'cheap-module-source-map',
   module: {
     rules: [
-      {
-        test: /index\.jsx$/,
-        exclude: /node_modules/,
-        loader: path.resolve(__dirname, './loaders/client.js')
-      },
       {
         test: /\.jsx?$/,
         loader: 'babel-loader'
@@ -26,7 +26,7 @@ const webpackConfig = {
 
 module.exports = function compileScripts(options) {
 
-  let {sources, destination, cwd, watch, log} = options;
+  let {sources, destination, cwd, watch, log, loader} = options;
 
   cwd = path.resolve(cwd);
 
@@ -54,7 +54,13 @@ module.exports = function compileScripts(options) {
       path: path.resolve(destination),
       filename: '[name].js'
     }
-  })
+  });
+
+  // add loader rule
+  if(loader) {
+
+    config.module.rules.unshift(loaderRule);
+  }
 
   let watching;
   let taskFn;
@@ -91,9 +97,9 @@ module.exports = function compileScripts(options) {
 
       instance.stats = stats;
 
-      if(watching) {
+      if (watching) {
 
-        instance.close = Promise.promisify((cb)=> watching.close(cb));
+        instance.close = () => new Promise((resolve) => watching.close(resolve));
       }
 
       return instance;
