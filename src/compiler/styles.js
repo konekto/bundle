@@ -20,7 +20,7 @@ const stylusConfig = {
 
 module.exports = function compileStyles(options) {
 
-  let {sources, cwd, includes, loader, watch, log} = options;
+  let {sources, cwd, includes, watch, log} = options;
 
   includes = includes || [];
 
@@ -30,8 +30,9 @@ module.exports = function compileStyles(options) {
       if(!watch) return;
 
       const sourcesToWatch = sources.concat(includes);
-      const mappedInclude = includes.map((s)=> path.resolve(cwd, s));
       const mappedSources = sourcesToWatch.map((s)=> path.resolve(cwd, s));
+
+      let instance;
 
       return watcher(mappedSources, (file) => {
 
@@ -40,14 +41,22 @@ module.exports = function compileStyles(options) {
           console.log('change detected', file);
         }
 
-        // the included file has chnaged
-        if(mappedInclude.indexOf(file) > - 1) {
+        return compileSources(options)
+          .then(()=> {
 
-          return compileSources(options);
-        }
+            instance.callbacks.forEach(cb => cb());
+          });
+      })
+        .then((watcher) => {
 
-        compile(file, options);
-      });
+          instance = watcher;
+          instance.callbacks = [];
+          instance.onChange = (cb)=> instance.callback.push(cb);
+          instance.removeChangeListener = (cb)=> instance.callbacks.filter((fn) => fn !== cb)
+          createFilesHasChangedPromise(instance);
+
+          return instance;
+      })
     })
 }
 
@@ -167,5 +176,22 @@ function fileExist(style) {
   style.define('file-exist', (p) => {
 
     return fs.existsSync(path.relative(dir, p.val));
+  })
+}
+
+
+function createFilesHasChangedPromise(instance) {
+
+  instance.filesHasChanged = new Promise((resolve) => {
+
+    instance.callbacks.push(listener);
+
+    function listener() {
+
+      instance.removeChangeListener(listener);
+
+      process.nextTick(()=> createFilesHasChangedPromise(instance));
+      resolve();
+    }
   })
 }

@@ -24,6 +24,11 @@ const webpackConfig = {
   },
 };
 
+/**
+ * compile scripts given the options
+ * @param options
+ * @returns {PromiseLike<T> | Promise<T>}
+ */
 module.exports = function compileScripts(options) {
 
   let {sources, destination, cwd, watch, log, loader} = options;
@@ -94,14 +99,42 @@ module.exports = function compileScripts(options) {
         }
       }
 
-
       instance.stats = stats;
 
+      // add watching methods
       if (watching) {
 
         instance.close = () => new Promise((resolve) => watching.close(resolve));
+        instance.onChange = createOnChangeListener(watching);
+        instance.removeChangeListener = (cb)=> watching.callbacks.filter((fn) => fn !== cb)
+        createFilesHasChangedPromise(instance, watching);
       }
 
       return instance;
     })
+}
+
+function createFilesHasChangedPromise(instance, watching) {
+
+
+  instance.filesHasChanged = new Promise((resolve) => {
+
+    watching.callbacks.push(()=> {
+
+      process.nextTick(()=> createFilesHasChangedPromise(instance, watching));
+      resolve();
+    })
+  })
+}
+
+function createOnChangeListener(watching) {
+
+  return function addChangeCallback(cb) {
+
+    watching.callbacks.push(()=> {
+
+      process.nextTick(()=> addChangeCallback(cb));
+      cb();
+    })
+  }
 }

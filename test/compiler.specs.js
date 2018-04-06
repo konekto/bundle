@@ -82,20 +82,53 @@ describe('compiler specs', function() {
 
           assert(fs.existsSync('./test/tmp/test.js'));
 
-          return replaceInFile('./test/stubs/test.jsx', 'test', 'changed')
+          replaceInFile('./test/stubs/test.jsx', 'test', 'changed');
+
+          return instance.filesHasChanged
             .then(()=> {
 
               assert(/changed/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
 
-              return replaceInFile('./test/stubs/test.jsx', 'changed', 'test')
+              replaceInFile('./test/stubs/test.jsx', 'changed', 'test');
             })
+            .then(()=> instance.filesHasChanged)
             .then(()=> {
-
-              assert(/test/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')))
+              assert(/test/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
             })
             .then(close, close)
         })
         .then(()=> done(), done)
+    })
+
+    it('should trigger event for changes', function(done) {
+
+      compileScripts({
+        loader: true,
+        watch: true,
+        sources: ['./*.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then((instance) => {
+
+          let counter = 0;
+
+          instance.onChange(()=> {
+
+            counter += 1;
+
+            if(counter === 1) {
+
+              return replaceInFile('./test/stubs/test.jsx', 'changed', 'test');
+            }
+
+            assert(counter === 2)
+            done();
+          })
+
+          replaceInFile('./test/stubs/test.jsx', 'test', 'changed');
+        })
+
     })
   })
 
@@ -169,8 +202,6 @@ describe('compiler specs', function() {
 
     it('should watch files for changes', function(done) {
 
-
-
       compileStyles({
 
         loader: true,
@@ -182,21 +213,25 @@ describe('compiler specs', function() {
       })
         .then((instance)=> {
 
-          assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
+          assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')));
 
-          return replaceInFile('./test/stubs/vars.styl', 'red', 'blue')
+          replaceInFile('./test/stubs/vars.styl', 'red', 'blue');
+
+          return instance.filesHasChanged
             .then(() => {
 
               assert(/#00f/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
 
-              return replaceInFile('./test/stubs/vars.styl', 'blue', 'red')
-            })
-            .then(() => {
+              replaceInFile('./test/stubs/vars.styl', 'blue', 'red');
 
-              assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
+              return instance.filesHasChanged
+                .then(() => {
 
+                  assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
+                })
+                .then(()=> instance.close(), ()=> instance.close())
             })
-            .then(()=> instance.close(), ()=> instance.close())
+
         })
         .then(()=> done())
         .catch(done)
@@ -211,8 +246,6 @@ function replaceInFile(file, from, to) {
   const content = fs.readFileSync(file, 'utf8');
 
   fs.writeFileSync(file, content.replace(from, to));
-
-  return timeout(1000);
 }
 
 function timeout(delay) {
