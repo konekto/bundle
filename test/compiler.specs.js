@@ -1,4 +1,4 @@
-const {compileScripts, compileStyles} = require('../src/compiler');
+const {compileScripts, compileStyles, compile} = require('../src/compiler');
 const fs = require('fs');
 const assert = require('assert');
 const cp= require('child_process');
@@ -13,6 +13,7 @@ describe('compiler specs', function() {
   beforeEach((done)=> {
 
     exec('rm -rf ./test/tmp')
+      .then(()=> exec('cp -r ./test/stubs-original ./test/stubs'))
       .then(()=> done())
       .catch(done)
   })
@@ -113,7 +114,7 @@ describe('compiler specs', function() {
 
           let counter = 0;
 
-          instance.onChange(()=> {
+          instance.onChange(function listener() {
 
             counter += 1;
 
@@ -123,6 +124,9 @@ describe('compiler specs', function() {
             }
 
             assert(counter === 2)
+
+            instance.removeChangeListener(listener);
+            instance.close();
             done();
           })
 
@@ -236,6 +240,61 @@ describe('compiler specs', function() {
         .then(()=> done())
         .catch(done)
 
+    })
+  })
+
+  describe('compile', function(){
+
+
+    it('should compile both styles and scripts', function(done) {
+
+      compile({
+
+        sources: ['./parent/*.*'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(()=> {
+
+          assert(fs.existsSync('./test/tmp/parent/styles.css'));
+          assert(fs.existsSync('./test/tmp/parent/index.js'));
+
+          done();
+        })
+        .catch(done)
+    })
+
+    it('should watch both styles and scripts', function(done) {
+
+      compile({
+        watch: true,
+        sources: ['./*.*'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then((instance)=> {
+
+          assert(fs.existsSync('./test/tmp/test.js'));
+          assert(fs.existsSync('./test/tmp/test.css'));
+
+          replaceInFile('./test/stubs/test.jsx', 'test', 'changed');
+
+          return instance.filesHasChanged
+            .then(()=> {
+
+              assert(/changed/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
+
+              replaceInFile('./test/stubs/test.styl', 'red', 'blue');
+
+              return instance.filesHasChanged
+                .then(()=> assert(/#00f/.test(fs.readFileSync('./test/tmp/test.css', 'utf8'))))
+                .then(()=> instance.close(), ()=> instance.close())
+                .then(done)
+
+            })
+
+        })
+        .catch(done)
     })
   })
 })

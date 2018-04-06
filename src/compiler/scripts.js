@@ -106,7 +106,7 @@ module.exports = function compileScripts(options) {
 
         instance.close = () => new Promise((resolve) => watching.close(resolve));
         instance.onChange = createOnChangeListener(watching);
-        instance.removeChangeListener = (cb)=> watching.callbacks.filter((fn) => fn !== cb)
+        instance.removeChangeListener = createRemoveChangeListener(watching);
         createFilesHasChangedPromise(instance, watching);
       }
 
@@ -129,12 +129,34 @@ function createFilesHasChangedPromise(instance, watching) {
 
 function createOnChangeListener(watching) {
 
+  watching.removeCallbacks = [];
+
   return function addChangeCallback(cb) {
 
-    watching.callbacks.push(()=> {
+    const index = watching.removeCallbacks.indexOf(cb);
+
+    if(index !== -1) {
+
+      return watching.removeCallbacks.splice(index, 1);
+    }
+
+    const listener = ()=> {
 
       process.nextTick(()=> addChangeCallback(cb));
       cb();
-    })
+    };
+
+    listener.cb = cb;
+
+    watching.callbacks.push(listener)
+  }
+}
+
+function createRemoveChangeListener(watching) {
+
+
+  return function removeChangeListener(cb) {
+
+    watching.removeCallbacks.push(cb);
   }
 }

@@ -51,8 +51,8 @@ module.exports = function compileStyles(options) {
 
           instance = watcher;
           instance.callbacks = [];
-          instance.onChange = (cb)=> instance.callback.push(cb);
-          instance.removeChangeListener = (cb)=> instance.callbacks.filter((fn) => fn !== cb)
+          instance.onChange = (cb)=> instance.callbacks.push(cb);
+          instance.removeChangeListener = (cb)=> instance.callbacks = instance.callbacks.filter((fn) => fn !== cb)
           createFilesHasChangedPromise(instance);
 
           return instance;
