@@ -6,6 +6,7 @@ const Promise = require('bluebird');
 const fs = Promise.promisifyAll(require('fs'));
 const mkdirp = Promise.promisify(require('mkdirp'));
 const watcher = require('../watcher');
+const _ = require('lodash');
 
 const stylusConfig = {
 
@@ -31,10 +32,13 @@ module.exports = function compileStyles(options) {
 
       const sourcesToWatch = sources.concat(includes);
       const mappedSources = sourcesToWatch.map((s)=> path.resolve(cwd, s));
+      const deps = getDependencies(mappedSources);
+
+      console.log(deps);
 
       let instance;
 
-      return watcher(mappedSources, (file) => {
+      return watcher(deps, (file) => {
 
         if (log) {
 
@@ -149,11 +153,7 @@ function loader (style) {
   const {filename} = options;
   const {dir: fileDir} = path.parse(filename);
 
-  const deps = dependencyTree.toList({
-    filename: path.resolve(fileDir, 'index.jsx'),
-    directory: './',
-    filter: path => path.indexOf('node_modules') === -1
-  })
+  const deps = getDependencies(path.resolve(fileDir, 'index.jsx'));
 
   deps.slice(0, -1)
     .forEach((dep) => {
@@ -193,5 +193,30 @@ function createFilesHasChangedPromise(instance) {
       process.nextTick(()=> createFilesHasChangedPromise(instance));
       resolve();
     }
+  })
+}
+
+function getDependencies(files) {
+
+  if(!Array.isArray(files)) {
+
+    files = [files];
+  }
+
+  const deps = files.reduce((prev, current)=> {
+
+    return prev.concat(_getDependencies(current));
+  }, []);
+
+  return _.uniq(deps);
+}
+
+function _getDependencies(file) {
+
+
+  return dependencyTree.toList({
+    filename: file,
+    directory: './',
+    filter: path => path.indexOf('node_modules') === -1
   })
 }

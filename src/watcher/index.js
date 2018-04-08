@@ -5,6 +5,11 @@ module.exports = function watchSources(sources, fn) {
 
   const watcher = chokidar.watch(sources, {});
 
+  const oldClose = watcher.close.bind(watcher);
+
+  // patch close
+  watcher.close = function() {oldClose()}
+
   watcher.on('change', fn);
   watcher.on('unlink', fn);
 

@@ -3,6 +3,7 @@ const fs = require('fs');
 const assert = require('assert');
 const cp= require('child_process');
 const Promise = require('bluebird');
+const {createServer} = require('http-server');
 
 const exec = Promise.promisify(cp.exec);
 
@@ -12,10 +13,9 @@ describe('compiler specs', function() {
 
   beforeEach((done)=> {
 
-    exec('rm -rf ./test/tmp')
-      .then(()=> exec('cp -r ./test/stubs-original ./test/stubs'))
-      .then(()=> done())
-      .catch(done)
+    exec('cp -a ./test/stubs-original/. ./test/stubs/')
+      .then(exec('rm -rf ./test/tmp'))
+      .then(done, done)
   })
 
   describe('scripts', function() {
@@ -239,12 +239,33 @@ describe('compiler specs', function() {
         })
         .then(()=> done())
         .catch(done)
-
     })
+
+    it.only('should watch imported files also', (done)=> {
+
+      compileStyles({
+
+        loader: true,
+        watch: true,
+        sources: ['./with-imports.styl'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then((instance) => {
+
+          assert(/#f00/.test(fs.readFileSync('./test/tmp/with-imports.css', 'utf8')));
+
+          replaceInFile('./test/stubs/vars.styl', 'red', 'blue');
+
+          return instance.filesHasChanged
+            .then(()=> assert(/#00f/.test(fs.readFileSync('./test/tmp/with-imports.css', 'utf8'))))
+            .then(instance.close, instance.close)
+        })
+        .then(done, done)
+    });
   })
 
   describe('compile', function(){
-
 
     it('should compile both styles and scripts', function(done) {
 
@@ -295,6 +316,41 @@ describe('compiler specs', function() {
 
         })
         .catch(done)
+    })
+  })
+
+  describe('sync', function() {
+
+    let server = createServer({root: './test/tmp/page'});
+
+    beforeEach(function(done) {
+
+      exec('mkdir -p ./test/tmp')
+        .then(()=> exec('cp -a ./test/stubs-original/page/. ./test/tmp/page/'))
+        .then(()=> {
+
+          server.listen('8080', '0.0.0.0', done);
+        })
+        .catch(done)
+    })
+
+
+    it('should proxy a server and sync', function(done) {
+
+
+      compile({
+        watch: true,
+        loader: true,
+        sources: ['./page/*.*'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(()=> {
+
+          assert(fs.existsSync('./test/tmp/page/client.js'));
+          assert(fs.existsSync('./test/tmp/page/styles.css'));
+        })
+
     })
   })
 })
