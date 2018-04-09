@@ -105,7 +105,7 @@ module.exports = function compileScripts(options) {
       if (watching) {
 
         instance.close = () => new Promise((resolve) => watching.close(resolve));
-        instance.onChange = createOnChangeListener(watching);
+        instance.onChange = createOnChangeListener(watching, log);
         instance.removeChangeListener = createRemoveChangeListener(watching);
         createFilesHasChangedPromise(instance, watching);
       }
@@ -127,7 +127,7 @@ function createFilesHasChangedPromise(instance, watching) {
   })
 }
 
-function createOnChangeListener(watching) {
+function createOnChangeListener(watching, log) {
 
   watching.removeCallbacks = [];
 
@@ -141,6 +141,11 @@ function createOnChangeListener(watching) {
     }
 
     const listener = ()=> {
+
+      if(log) {
+
+        console.log('scripts change detected');
+      }
 
       process.nextTick(()=> addChangeCallback(cb));
       cb();

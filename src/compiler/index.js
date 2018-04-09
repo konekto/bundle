@@ -2,6 +2,7 @@ const path = require('path');
 const glob = require('glob');
 const compileScripts = require('./scripts');
 const compileStyles = require('./styles');
+const createSync = require('../sync');
 
 /**
  * Compile anything
@@ -9,7 +10,12 @@ const compileStyles = require('./styles');
  */
 function compile(options) {
 
-  let {sources, cwd, watch} = options;
+  let {sources, cwd, watch, sync} = options;
+
+  if(sync) {
+
+    watch = true;
+  }
 
   let scripts = [];
   let styles = [];
@@ -40,8 +46,8 @@ function compile(options) {
     })
   })
 
-  let scriptsPromise = compileScripts(Object.assign({}, options, {sources: scripts}));
-  let stylesPromise = compileStyles(Object.assign({}, options, {sources: styles}));
+  let scriptsPromise = compileScripts(Object.assign({}, options, {sources: scripts, watch}));
+  let stylesPromise = compileStyles(Object.assign({}, options, {sources: styles, watch}));
 
   return Promise.all([scriptsPromise, stylesPromise])
     .then((results)=> {
@@ -51,7 +57,17 @@ function compile(options) {
         return results;
       }
 
-      const instance = proxyMethods(['onChange', 'removeChangeListener', 'close'], results);
+      const [scriptsCompiler, stylesCompiler] = results;
+
+      if(sync) {
+
+        let syncInstance = createSync({proxy: sync});
+
+        scriptsCompiler.onChange(()=> syncInstance.reload('*.js'));
+        stylesCompiler.onChange(()=> syncInstance.reload('*.css'));
+      }
+
+      const instance = proxyMethods(['onChange', 'removeChangeListener', 'close'], [scriptsCompiler, stylesCompiler]);
 
       createFilesHasChangedPromise(instance);
 
@@ -66,7 +82,7 @@ function proxyMethods(methods, instances) {
 
   methods.forEach((method)=> {
 
-    instance[method] = (arg)=> {
+    instance[method] = (arg) => {
 
       instances.forEach((i) => i[method](arg))
     }

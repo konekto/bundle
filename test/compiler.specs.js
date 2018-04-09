@@ -241,7 +241,7 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it.only('should watch imported files also', (done)=> {
+    it('should watch imported files also', (done)=> {
 
       compileStyles({
 
@@ -335,12 +335,14 @@ describe('compiler specs', function() {
     })
 
 
-    it('should proxy a server and sync', function(done) {
+    it.skip('should proxy a server and sync', function(done) {
 
+      this.timeout(20000);
 
       compile({
-        watch: true,
+        sync: 'http://localhost:8080',
         loader: true,
+        log: true,
         sources: ['./page/*.*'],
         destination: './test/tmp',
         cwd: './test/stubs'

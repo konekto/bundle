@@ -21,7 +21,7 @@ const stylusConfig = {
 
 module.exports = function compileStyles(options) {
 
-  let {sources, cwd, includes, watch, log} = options;
+  let {sources, cwd, includes, watch, loader, log} = options;
 
   includes = includes || [];
 
@@ -32,9 +32,17 @@ module.exports = function compileStyles(options) {
 
       const sourcesToWatch = sources.concat(includes);
       const mappedSources = sourcesToWatch.map((s)=> path.resolve(cwd, s));
-      const deps = getDependencies(mappedSources);
+      let deps = getDependencies(mappedSources);
 
-      console.log(deps);
+      if(loader) {
+
+        const loaderDeps = deps.reduce((prev, current)=> {
+
+          return prev.concat(getLoaderDependencies(current));
+        }, []);
+
+        deps = deps.concat(loaderDeps);
+      }
 
       let instance;
 
@@ -151,20 +159,14 @@ function loader (style) {
 
   const {options} = style;
   const {filename} = options;
-  const {dir: fileDir} = path.parse(filename);
+  const {dir} = path.parse(filename);
 
-  const deps = getDependencies(path.resolve(fileDir, 'index.jsx'));
+  const deps = getLoaderDependencies(filename);
 
-  deps.slice(0, -1)
-    .forEach((dep) => {
+  deps.forEach((dep) => {
 
-      const {dir: depDir} = path.parse(dep);
-      const stylePath = path.resolve(depDir, 'styles.styl');
-
-      if (!fs.existsSync(stylePath)) return;
-
-      style.import(path.relative(fileDir, stylePath));
-    })
+    style.import(path.relative(dir, dep));
+  })
 }
 
 function fileExist(style) {
@@ -194,6 +196,20 @@ function createFilesHasChangedPromise(instance) {
       resolve();
     }
   })
+}
+
+function getLoaderDependencies(file) {
+
+  const {dir: fileDir} = path.parse(file);
+  const deps = getDependencies(path.resolve(fileDir, 'index.jsx'));
+
+  return deps.slice(0, -1)
+    .map((dep) => {
+
+      const {dir: depDir} = path.parse(dep);
+      return  path.resolve(depDir, 'styles.styl');
+    })
+    .filter((path)=> fs.existsSync(path))
 }
 
 function getDependencies(files) {
