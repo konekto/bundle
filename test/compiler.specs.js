@@ -318,43 +318,6 @@ describe('compiler specs', function() {
         .catch(done)
     })
   })
-
-  describe('sync', function() {
-
-    let server = createServer({root: './test/tmp/page'});
-
-    beforeEach(function(done) {
-
-      exec('mkdir -p ./test/tmp')
-        .then(()=> exec('cp -a ./test/stubs-original/page/. ./test/tmp/page/'))
-        .then(()=> {
-
-          server.listen('8080', '0.0.0.0', done);
-        })
-        .catch(done)
-    })
-
-
-    it.skip('should proxy a server and sync', function(done) {
-
-      this.timeout(20000);
-
-      compile({
-        sync: 'http://localhost:8080',
-        loader: true,
-        log: true,
-        sources: ['./page/*.*'],
-        destination: './test/tmp',
-        cwd: './test/stubs'
-      })
-        .then(()=> {
-
-          assert(fs.existsSync('./test/tmp/page/client.js'));
-          assert(fs.existsSync('./test/tmp/page/styles.css'));
-        })
-
-    })
-  })
 })
 
 
@@ -363,12 +326,4 @@ function replaceInFile(file, from, to) {
   const content = fs.readFileSync(file, 'utf8');
 
   fs.writeFileSync(file, content.replace(from, to));
-}
-
-function timeout(delay) {
-
-  return new Promise((resolve)=> {
-
-    setTimeout(()=> resolve(), delay)
-  });
 }

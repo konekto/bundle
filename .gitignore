@@ -1,4 +1,5 @@
 .idea
+.bundlerc
 test/tmp
 test/stubs
 

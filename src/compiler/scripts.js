@@ -52,6 +52,7 @@ module.exports = function compileScripts(options) {
     })
   })
 
+
   const config = Object.assign({}, webpackConfig, {
 
     entry: entries,
@@ -151,9 +152,7 @@ function createOnChangeListener(watching, log) {
       cb();
     };
 
-    listener.cb = cb;
-
-    watching.callbacks.push(listener)
+    watching.callbacks.push(listener);
   }
 }
 

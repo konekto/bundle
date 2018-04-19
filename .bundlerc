@@ -1,0 +1,6 @@
+{
+  "sources" : ["page/*"],
+  "destination": "test/tmp",
+  "cwd": "test/stubs",
+  "sync": "http://localhost:8080"
+}

@@ -21,55 +21,86 @@ const stylusConfig = {
 
 module.exports = function compileStyles(options) {
 
-  let {sources, cwd, includes, watch, loader, log} = options;
+  let {watch} = options;
 
-  includes = includes || [];
 
   return compileSources(options)
     .then(()=> {
 
       if(!watch) return;
 
-      const sourcesToWatch = sources.concat(includes);
-      const mappedSources = sourcesToWatch.map((s)=> path.resolve(cwd, s));
-      let deps = getDependencies(mappedSources);
-
-      if(loader) {
-
-        const loaderDeps = deps.reduce((prev, current)=> {
-
-          return prev.concat(getLoaderDependencies(current));
-        }, []);
-
-        deps = deps.concat(loaderDeps);
-      }
-
-      let instance;
-
-      return watcher(deps, (file) => {
-
-        if (log) {
-
-          console.log('change detected', file);
-        }
-
-        return compileSources(options)
-          .then(()=> {
-
-            instance.callbacks.forEach(cb => cb());
-          });
-      })
-        .then((watcher) => {
-
-          instance = watcher;
-          instance.callbacks = [];
-          instance.onChange = (cb)=> instance.callbacks.push(cb);
-          instance.removeChangeListener = (cb)=> instance.callbacks = instance.callbacks.filter((fn) => fn !== cb)
-          createFilesHasChangedPromise(instance);
-
-          return instance;
-      })
+      return watchSources(options);
     })
+}
+
+function watchSources(options) {
+
+  let {log} = options;
+
+  const deps = getWatchSources(options);
+
+  let instance;
+
+  return watcher(deps, (file) => {
+
+    log && console.log('change detected', file);
+
+    const newDeps = getWatchSources(options);
+
+    // we got some new files
+    if(newDeps.length !== deps.length) {
+
+      log && console.log('new dependencies added', _.xor(deps, newDeps));
+
+      instance.close();
+
+      watchSources(options)
+        .then((newInstance) => {
+
+          instance.callbacks = newInstance.callbacks;
+        })
+    }
+
+    return compileSources(options)
+      .then(()=> {
+
+        instance.callbacks.forEach(cb => cb());
+      });
+  })
+    .then((watcher) => {
+
+      instance = watcher;
+      instance.callbacks = [];
+      instance.onChange = (cb)=> instance.callbacks.push(cb);
+      instance.removeChangeListener = (cb)=> instance.callbacks = instance.callbacks.filter((fn) => fn !== cb)
+      createFilesHasChangedPromise(instance);
+
+      return instance;
+    })
+}
+
+function getWatchSources(options) {
+
+  let {sources, cwd, includes, loader} = options;
+
+  includes = includes || [];
+
+  const sourcesToWatch = sources.concat(includes);
+  const mappedSources = sourcesToWatch.map((s)=> path.resolve(cwd, s));
+  let deps = getDependencies(mappedSources);
+
+  if(loader) {
+
+    const loaderDeps = deps.reduce((prev, current)=> {
+
+      return prev.concat(getLoaderDependencies(current));
+    }, []);
+
+    deps = deps.concat(loaderDeps);
+    deps = _.uniq(deps);
+  }
+
+  return deps;
 }
 
 function compileSources(options) {

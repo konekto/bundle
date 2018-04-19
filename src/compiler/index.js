@@ -46,8 +46,11 @@ function compile(options) {
     })
   })
 
-  let scriptsPromise = compileScripts(Object.assign({}, options, {sources: scripts, watch}));
-  let stylesPromise = compileStyles(Object.assign({}, options, {sources: styles, watch}));
+  const hasScripts = !!scripts.length;
+  const hasStyles = !!styles.length;
+
+  let scriptsPromise = hasScripts ? compileScripts(Object.assign({}, options, {sources: scripts, watch})) : Promise.resolve();
+  let stylesPromise = hasStyles ? compileStyles(Object.assign({}, options, {sources: styles, watch})) : Promise.resolve();
 
   return Promise.all([scriptsPromise, stylesPromise])
     .then((results)=> {
@@ -63,8 +66,8 @@ function compile(options) {
 
         let syncInstance = createSync({proxy: sync});
 
-        scriptsCompiler.onChange(()=> syncInstance.reload('*.js'));
-        stylesCompiler.onChange(()=> syncInstance.reload('*.css'));
+        hasScripts && scriptsCompiler.onChange(()=> syncInstance.reload('*'));
+        hasStyles && stylesCompiler.onChange(()=> syncInstance.reload('*.css'));
       }
 
       const instance = proxyMethods(['onChange', 'removeChangeListener', 'close'], [scriptsCompiler, stylesCompiler]);
@@ -84,7 +87,7 @@ function proxyMethods(methods, instances) {
 
     instance[method] = (arg) => {
 
-      instances.forEach((i) => i[method](arg))
+      instances.forEach((i) => i && i[method](arg))
     }
   })
 
