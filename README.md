@@ -13,7 +13,7 @@ Configure babel with your `.babelrc` and your good to go.
 
 ## .bundlerc
 
-```json
+```js
 {
   "cwd": "./src" , //parent folder   
   "destination": "./build" //destination folder,
