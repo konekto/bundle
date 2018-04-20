@@ -68,14 +68,18 @@ function init_cli() {
     .then((_inst)=> instance = _inst)
     .catch((err)=> {
 
-      instance.close && instance.close();
+      close();
       console.log(err)
     })
 }
 
+function close() {
+
+  instance && instance.close && instance.close();
+}
 
 process.on('SIGINT', () => {
 
-  instance && instance.close && instance.close();
+  close();
   process.exit();
 });
