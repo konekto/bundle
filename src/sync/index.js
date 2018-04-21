@@ -2,6 +2,7 @@ const browserSync = require("browser-sync");
 
 const defaultOptions = {
   port: 3010,
+  notify: false,
   ghostMode: false
 };
 

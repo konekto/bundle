@@ -98,11 +98,11 @@ function createFilesHasChangedPromise(instance) {
 
   instance.filesHasChanged = new Promise((resolve) => {
 
-    instance.onChange(listener);
+    instance.onChange(fileHasChangedlistener);
 
-    function listener() {
+    function fileHasChangedlistener() {
 
-      instance.removeChangeListener(listener);
+      instance.removeChangeListener(fileHasChangedlistener);
 
       process.nextTick(()=> createFilesHasChangedPromise(instance));
       resolve();

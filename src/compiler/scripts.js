@@ -66,7 +66,7 @@ module.exports = function compileScripts(options) {
   // add loader rule
   if(loader) {
 
-    config.module.rules.unshift(loaderRule);
+    config.module.rules = [loaderRule, ...config.module.rules];
   }
 
   let watching;
@@ -107,9 +107,13 @@ module.exports = function compileScripts(options) {
       if (watching) {
 
         instance.close = () => new Promise((resolve) => watching.close(resolve));
-        instance.onChange = createOnChangeListener(watching, log);
+        instance.onChange = createOnChangeListener(watching, options);
         instance.removeChangeListener = createRemoveChangeListener(watching);
         createFilesHasChangedPromise(instance, watching);
+
+        // add logger 
+
+        instance.onChange(()=> log && console.log('scripts change detected!'))
       }
 
       return instance;
@@ -129,7 +133,7 @@ function createFilesHasChangedPromise(instance, watching) {
   })
 }
 
-function createOnChangeListener(watching, log) {
+function createOnChangeListener(watching, options) {
 
   watching.removeCallbacks = [];
 
@@ -143,11 +147,6 @@ function createOnChangeListener(watching, log) {
     }
 
     const listener = ()=> {
-
-      if(log) {
-
-        console.log('scripts change detected');
-      }
 
       process.nextTick(()=> addChangeCallback(cb));
       cb();

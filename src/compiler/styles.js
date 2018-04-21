@@ -19,10 +19,15 @@ const stylusConfig = {
   ]
 }
 
+/**
+ * Compile with options
+ * @param options 
+ */
 module.exports = function compileStyles(options) {
 
   let {watch} = options;
 
+  // TODO check paths  
 
   return compileSources(options)
     .then(()=> {
@@ -33,6 +38,9 @@ module.exports = function compileStyles(options) {
     })
 }
 
+/**
+ * watch sources for changes
+ */
 function watchSources(options) {
 
   let {log} = options;
@@ -130,12 +138,26 @@ function getDestination(file, options) {
 function compile(source, options) {
 
   const dest = getDestination(source, options);
+
+  // TODO include should be relative to cwd
   const stylusOptions = Object.assign({}, stylusConfig, {import: options.includes});
 
-  // add loader
-  if (options.loader) {
+  // add cwd to paths
+  if(stylusOptions.paths) {
 
-    stylusOptions.use.unshift(loader);
+    stylusOptions.paths = [...stylusOptions.paths, options.cwd];
+  }
+
+  // add loader
+  // if (options.loader) {
+
+  //   stylusOptions.use = [loader, ...stylusOptions.use];
+  // }
+
+
+  if(options.log) {
+
+    console.log('compiling', source);
   }
 
   return fs.readFileAsync(source, 'utf8')
@@ -149,19 +171,47 @@ function compile(source, options) {
       Object.keys(stylusOptions)
         .forEach((key) => {
 
-          const value = stylusOptions[key];
+          let value = stylusOptions[key];
 
           if(!value) return;
 
+          if (key === 'use') {
+
+            if(!Array.isArray(value)) {
+
+              value = [value];
+            }
+
+            value.forEach((v) => s.use(v));
+            return;
+          }
+
           if (key === 'use' || key === 'import') {
 
-            value.forEach((v) => s[key](v));
+            if(!Array.isArray(value)) {
+
+              value = [value];
+            }
+
+            value.forEach((v) => {
+
+              const resolvedPath = path.resolve(options.cwd, v);
+
+              s.import(v)
+            });
             return;
           }
 
           s.set(key, value);
         })
 
+        if (options.loader) {
+
+          const deps = getLoaderDependencies(source);
+
+          deps.forEach((dep) => s.import(dep));
+        }
+ 
       return new Promise((resolve, reject) => {
         s.render((err, content) => {
 
@@ -183,6 +233,10 @@ function compile(source, options) {
         })
       })
     })
+    .catch((err) => {
+
+      console.error(err);
+    })
 }
 
 
@@ -190,14 +244,10 @@ function loader (style) {
 
   const {options} = style;
   const {filename} = options;
-  const {dir} = path.parse(filename);
 
   const deps = getLoaderDependencies(filename);
 
-  deps.forEach((dep) => {
-
-    style.import(path.relative(dir, dep));
-  })
+  deps.forEach((dep) => style.import(dep));
 }
 
 function fileExist(style) {
