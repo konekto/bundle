@@ -19,10 +19,16 @@ const webpackConfig = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        loader: 'babel-loader'
+        loader: 'babel-loader',
+        options: {
+          cacheDirectory: true
+        }
       }
     ]
   },
+  plugins: [
+
+  ]
 };
 
 /**
@@ -32,9 +38,10 @@ const webpackConfig = {
  */
 module.exports = function compileScripts(options) {
 
-  let {sources, destination, cwd, watch, log, loader} = options;
+  let {sources, destination, cwd, watch, mode, log, loader} = options;
 
   cwd = path.resolve(cwd);
+  mode = mode || 'development';
 
   const entries = {};
 
@@ -54,14 +61,18 @@ module.exports = function compileScripts(options) {
   })
 
 
-  const config = Object.assign({}, webpackConfig, {
-
+  const config = {
+    ...webpackConfig,
+    mode,
     entry: entries,
     output: {
       path: path.resolve(destination),
       filename: '[name].js'
-    }
-  });
+    },
+    plugins : [
+      new webpack.DefinePlugin({NODE_ENV: JSON.stringify(mode)}),
+    ]
+  }
 
   // add loader rule
   if(loader) {
@@ -111,7 +122,7 @@ module.exports = function compileScripts(options) {
         instance.removeChangeListener = createRemoveChangeListener(watching);
         createFilesHasChangedPromise(instance, watching);
 
-        // add logger 
+        // add logger
 
         instance.onChange(()=> log && console.log('scripts change detected!'))
       }
