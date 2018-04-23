@@ -21,13 +21,13 @@ const stylusConfig = {
 
 /**
  * Compile with options
- * @param options 
+ * @param options
  */
 module.exports = function compileStyles(options) {
 
   let {watch} = options;
 
-  // TODO check paths  
+  // TODO check paths
 
   return compileSources(options)
     .then(()=> {
@@ -211,7 +211,7 @@ function compile(source, options) {
 
           deps.forEach((dep) => s.import(dep));
         }
- 
+
       return new Promise((resolve, reject) => {
         s.render((err, content) => {
 
@@ -250,7 +250,7 @@ function loader (style) {
   deps.forEach((dep) => style.import(dep));
 }
 
-function fileExist(style) {
+function fileExist(style)   {
 
   const {options} = style;
   const {filename} = options;

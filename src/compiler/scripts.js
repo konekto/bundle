@@ -12,14 +12,16 @@ const loaderRule = {
 const webpackConfig = {
 
   cache: true,
-  mode: 'development',
   devtool: 'cheap-module-source-map',
   module: {
     rules: [
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        loader: 'babel-loader'
+        loader: 'babel-loader',
+        options: {
+          cacheDirectory: true
+        }
       }
     ]
   },
@@ -32,47 +34,12 @@ const webpackConfig = {
  */
 module.exports = function compileScripts(options) {
 
-  let {sources, destination, cwd, watch, log, loader} = options;
-
-  cwd = path.resolve(cwd);
-
-  const entries = {};
-
-  sources.forEach((source) => {
-
-    source = path.resolve(cwd, source);
-
-    const files = glob.hasMagic(source) ? glob.sync(source): [source];
-
-    files.forEach((file)=> {
-
-      const {dir, name} = path.parse(file);
-      const key = path.relative(cwd, dir) + '/' + name;
-
-      entries[key] = file;
-    })
-  })
-
-
-  const config = Object.assign({}, webpackConfig, {
-
-    entry: entries,
-    output: {
-      path: path.resolve(destination),
-      filename: '[name].js'
-    }
-  });
-
-  // add loader rule
-  if(loader) {
-
-    config.module.rules = [loaderRule, ...config.module.rules];
-  }
+  let {watch, log} = options;
 
   let watching;
   let taskFn;
 
-  const instance = webpack(config);
+  const instance = getWebpackBundler(options);
 
   if (watch) {
 
@@ -111,13 +78,66 @@ module.exports = function compileScripts(options) {
         instance.removeChangeListener = createRemoveChangeListener(watching);
         createFilesHasChangedPromise(instance, watching);
 
-        // add logger 
+        // add logger
 
         instance.onChange(()=> log && console.log('scripts change detected!'))
       }
 
       return instance;
     })
+}
+
+// export this too
+module.exports.getWebpackBundler = getWebpackBundler;
+
+function getWebpackBundler(options) {
+
+  let {sources, destination, cwd, mode, loader} = options;
+
+  cwd = path.resolve(cwd);
+  mode = mode || 'development';
+
+  const isDev = mode === 'development'
+
+  let entries = {};
+
+  sources.forEach((source) => {
+
+    source = path.resolve(cwd, source);
+
+    const files = glob.hasMagic(source) ? glob.sync(source): [source];
+
+    files.forEach((file)=> {
+
+      const {dir, name} = path.parse(file);
+      const key = path.relative(cwd, dir) + '/' + name;
+
+      entries[key] = isDev ? [require.resolve('webpack-hot-middleware/client'), file] : [file];
+    })
+  })
+
+  let config = {
+    ...webpackConfig,
+    mode,
+    entry: entries,
+    output: {
+      path: path.resolve(destination),
+      publicPath: '/',
+      filename: '[name].js'
+    },
+    plugins: [
+      new webpack.DefinePlugin({NODE_ENV: JSON.stringify(mode)}),
+      isDev ? new webpack.HotModuleReplacementPlugin() : null
+    ]
+  };
+
+  // add loader rule
+  if(loader) {
+
+    config.module.rules = [loaderRule, ...config.module.rules];
+  }
+
+  return webpack(config);
 }
 
 function createFilesHasChangedPromise(instance, watching) {

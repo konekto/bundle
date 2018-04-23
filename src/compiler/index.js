@@ -3,6 +3,7 @@ const glob = require('glob');
 const compileScripts = require('./scripts');
 const compileStyles = require('./styles');
 const createSync = require('../sync');
+const Promise = require('bluebird');
 
 /**
  * Compile anything
@@ -10,7 +11,7 @@ const createSync = require('../sync');
  */
 function compile(options) {
 
-  let {sources, cwd, watch, sync} = options;
+  let {sources, destination, cwd, watch, sync} = options;
 
   if(sync) {
 
@@ -49,8 +50,8 @@ function compile(options) {
   const hasScripts = !!scripts.length;
   const hasStyles = !!styles.length;
 
-  let scriptsPromise = hasScripts ? compileScripts(Object.assign({}, options, {sources: scripts, watch})) : Promise.resolve();
-  let stylesPromise = hasStyles ? compileStyles(Object.assign({}, options, {sources: styles, watch})) : Promise.resolve();
+  let scriptsPromise = hasScripts ? compileScripts({...options, sources: scripts}) : Promise.resolve();
+  let stylesPromise = hasStyles ? compileStyles({...options,  sources: styles, watch}) : Promise.resolve();
 
   return Promise.all([scriptsPromise, stylesPromise])
     .then((results)=> {
@@ -64,9 +65,9 @@ function compile(options) {
 
       if(sync) {
 
-        let syncInstance = createSync({proxy: sync});
+        let syncInstance = createSync({proxy: sync, destination, bundler: compileScripts.getWebpackBundler({...options, sources: scripts})});
 
-        hasScripts && scriptsCompiler.onChange(()=> syncInstance.reload('*'));
+        // hasScripts && scriptsCompiler.onChange(()=> syncInstance.reload('*'));
         hasStyles && stylesCompiler.onChange(()=> syncInstance.reload('*.css'));
       }
 
@@ -87,7 +88,7 @@ function proxyMethods(methods, instances) {
 
     instance[method] = (arg) => {
 
-      instances.forEach((i) => i && i[method](arg))
+      instances.forEach((i) => i && i[method] && i[method](arg))
     }
   })
 

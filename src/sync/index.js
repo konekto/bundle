@@ -1,4 +1,6 @@
 const browserSync = require("browser-sync");
+const webpackDevMiddleware = require("webpack-dev-middleware");
+const webpackHotMiddleware = require("webpack-hot-middleware");
 
 const defaultOptions = {
   port: 3010,
@@ -9,7 +11,23 @@ const defaultOptions = {
 
 module.exports = function sync(options) {
 
-  options = Object.assign({}, defaultOptions, options);
+  const {bundler, destination, ...rest} = {...defaultOptions, ...options};
 
-  return browserSync(options);
+  let browserSyncOptions = rest;
+
+  if(options.bundler) {
+
+    browserSyncOptions = {
+      ...rest,
+      middleware: [
+        webpackDevMiddleware(bundler, {
+          publicPath: '/',
+          stats: { colors: true }
+        }),
+        webpackHotMiddleware(bundler)
+      ]
+    }
+  }
+
+  return browserSync(browserSyncOptions);
 }
