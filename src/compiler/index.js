@@ -3,6 +3,7 @@ const glob = require('glob');
 const compileScripts = require('./scripts');
 const compileStyles = require('./styles');
 const createSync = require('../sync');
+const _ = require('lodash');
 
 /**
  * Compile anything
@@ -49,8 +50,8 @@ function compile(options) {
   const hasScripts = !!scripts.length;
   const hasStyles = !!styles.length;
 
-  let scriptsPromise = hasScripts ? compileScripts(Object.assign({}, options, {sources: scripts, watch})) : Promise.resolve();
-  let stylesPromise = hasStyles ? compileStyles(Object.assign({}, options, {sources: styles, watch})) : Promise.resolve();
+  let scriptsPromise = hasScripts ? compileScripts({...options, sources: scripts, watch}) : Promise.resolve();
+  let stylesPromise = hasStyles ? compileStyles({...options, sources: styles, watch}): Promise.resolve();
 
   return Promise.all([scriptsPromise, stylesPromise])
     .then((results)=> {

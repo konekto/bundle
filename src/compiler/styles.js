@@ -21,13 +21,13 @@ const stylusConfig = {
 
 /**
  * Compile with options
- * @param options 
+ * @param options
  */
 module.exports = function compileStyles(options) {
 
   let {watch} = options;
 
-  // TODO check paths  
+  // TODO check paths
 
   return compileSources(options)
     .then(()=> {
@@ -58,7 +58,7 @@ function watchSources(options) {
     // we got some new files
     if(newDeps.length !== deps.length) {
 
-      log && console.log('new dependencies added', _.xor(deps, newDeps));
+      log && console.log('dependencies difference', _.xor(deps, newDeps));
 
       instance.close();
 
@@ -138,8 +138,6 @@ function getDestination(file, options) {
 function compile(source, options) {
 
   const dest = getDestination(source, options);
-
-  // TODO include should be relative to cwd
   const stylusOptions = Object.assign({}, stylusConfig, {import: options.includes});
 
   // add cwd to paths
@@ -147,13 +145,6 @@ function compile(source, options) {
 
     stylusOptions.paths = [...stylusOptions.paths, options.cwd];
   }
-
-  // add loader
-  // if (options.loader) {
-
-  //   stylusOptions.use = [loader, ...stylusOptions.use];
-  // }
-
 
   if(options.log) {
 
@@ -211,7 +202,7 @@ function compile(source, options) {
 
           deps.forEach((dep) => s.import(dep));
         }
- 
+
       return new Promise((resolve, reject) => {
         s.render((err, content) => {
 

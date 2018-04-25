@@ -27,6 +27,7 @@ function init_cli() {
 			--cwd set cwd
 			--dest destination path
 			--src source glob
+			--mode production or development
 
 		Examples
 			$ bundler --sync
@@ -57,6 +58,11 @@ function init_cli() {
   if(flags.dest) {
 
     flags.destination = flags.dest;
+  }
+
+  if(flags.mode === 'production') {
+
+    flags.sync = false;
   }
 
   const config = {
