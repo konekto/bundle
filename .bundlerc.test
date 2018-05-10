@@ -1,0 +1,5 @@
+{
+  "sources" : ["page/*"],
+  "destination": "test/tmp",
+  "cwd": "test/stubs"
+}

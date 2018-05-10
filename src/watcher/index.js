@@ -11,6 +11,7 @@ module.exports = function watchSources(sources, fn) {
   watcher.close = function() {oldClose()}
 
   watcher.on('change', fn);
+  watcher.on('add', fn);
   watcher.on('unlink', fn);
 
   return new Promise((resolve, reject) => {

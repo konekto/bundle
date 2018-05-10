@@ -45,29 +45,38 @@ function watchSources(options) {
 
   let {log} = options;
 
-  const deps = getWatchSources(options);
+  let deps = getWatchSources(options);
 
   let instance;
 
+  log && console.log('start watching', deps);
+
   return watcher(deps, (file) => {
+
+    // initial add event should be ignored
+    if(!instance) return;
 
     log && console.log('change detected', file);
 
-    const newDeps = getWatchSources(options);
+    let newDeps = getWatchSources(options);
 
     // we got some new files
     if(newDeps.length !== deps.length) {
 
-      log && console.log('dependencies difference', _.xor(deps, newDeps));
+      const filesToAdd = _.difference(newDeps, deps);
+      const filesToRemove = _.difference(deps, newDeps);
 
-      instance.close();
+      log && console.log('dependencies to add to watch', filesToAdd);
+      log && console.log('dependencies to remove from watch', filesToRemove);
 
-      watchSources(options)
-        .then((newInstance) => {
+      instance.add(filesToAdd);
+      instance.unwatch(filesToRemove);
 
-          instance.callbacks = newInstance.callbacks;
-        })
+      deps = newDeps;
+
+      log && console.log('watching ', deps);
     }
+
 
     return compileSources(options)
       .then(()=> {
