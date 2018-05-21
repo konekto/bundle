@@ -91,3 +91,8 @@ process.on('SIGINT', () => {
   close();
   process.exit();
 });
+
+process.on('SIGTERM', () => {
+  close();
+  process.exit();
+});
