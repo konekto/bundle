@@ -3,7 +3,6 @@ const fs = require('fs');
 const assert = require('assert');
 const cp= require('child_process');
 const Promise = require('bluebird');
-const {createServer} = require('http-server');
 
 const exec = Promise.promisify(cp.exec);
 
@@ -18,7 +17,7 @@ describe('compiler specs', function() {
       .then(done, done)
   })
 
-  describe('scripts', function() {
+  describe.only('scripts', function() {
 
     it('should compile a jsx file', function(done) {
 
@@ -208,7 +207,6 @@ describe('compiler specs', function() {
 
       compileStyles({
 
-        loader: true,
         watch: true,
         includes: ['./vars.styl'],
         sources: ['./main.styl'],
@@ -217,6 +215,7 @@ describe('compiler specs', function() {
       })
         .then((instance)=> {
 
+          console.log('#f00')
           assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')));
 
           replaceInFile('./test/stubs/vars.styl', 'red', 'blue');
@@ -224,6 +223,7 @@ describe('compiler specs', function() {
           return instance.filesHasChanged
             .then(() => {
 
+              console.log('#00f')
               assert(/#00f/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
 
               replaceInFile('./test/stubs/vars.styl', 'blue', 'red');
@@ -231,10 +231,10 @@ describe('compiler specs', function() {
               return instance.filesHasChanged
                 .then(() => {
 
+                  console.log('#f00')
                   assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
                 })
-                .then(()=> instance.close(), ()=> instance.close())
-            })
+            }).finally(()=> instance.close())
 
         })
         .then(()=> done())
@@ -325,5 +325,15 @@ function replaceInFile(file, from, to) {
 
   const content = fs.readFileSync(file, 'utf8');
 
-  fs.writeFileSync(file, content.replace(from, to));
+  console.log('replace');
+
+  setTimeout(()=> {
+
+    fs.writeFile(file, content.replace(from, to), (err)=> {
+
+      console.log('replaced');
+    });
+  }, 1000)
+
+
 }
