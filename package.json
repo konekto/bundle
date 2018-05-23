@@ -24,6 +24,7 @@
     "@babel/preset-env": "^7.0.0-beta.42",
     "@babel/preset-react": "^7.0.0-beta.42",
     "babel-loader": "^8.0.0-beta.2",
+    "babel-polyfill": "^6.26.0",
     "browser-sync": "^2.23.6",
     "chokidar": "^2.0.3",
     "dependency-tree": "^6.0.1",

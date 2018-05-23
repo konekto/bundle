@@ -53,7 +53,7 @@ module.exports = function compileScripts(options) {
       const {dir, name} = path.parse(file);
       const key = path.relative(cwd, dir) + '/' + name;
 
-      entries[key] = file;
+      entries[key] = ['babel-polyfill', file];
     })
   })
 
