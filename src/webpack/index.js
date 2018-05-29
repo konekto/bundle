@@ -18,12 +18,12 @@ function _webpack(config, options) {
   ] : [];
 
   const output = sync ? {
-    ...config.output,
-    publicPath: 'http://localhost:3001'
+    ...config.output
   } : config.output
 
   config = {
     ...config,
+    watch,
     output,
     plugins: [
       ...config.plugins,
@@ -90,8 +90,14 @@ function starDevServer(compiler, options) {
 
   const server = new WebpackDevServer(compiler, {
     hot: true,
-    contentBase: options.destination,
-    publicPath: 'http://localhost:3001'
+    hotOnly: true,
+    publicPath: `http://0.0.0.0:3001/`,
+    stats: {
+      colors: true,
+      chunks: false
+    },
+    headers: { "Access-Control-Allow-Origin": "*"},
+    contentBase: options.destination
   });
 
   return new Promise((resolve, reject) => {

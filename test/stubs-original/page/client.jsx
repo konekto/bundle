@@ -1,3 +1,7 @@
+if (module.hot) {
+  require('webpack/hot/dev-server');
+}
+
 import React from 'react';
 import { hydrate } from 'react-dom';
 import Template from '../parent/index.jsx';

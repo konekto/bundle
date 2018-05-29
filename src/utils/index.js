@@ -22,7 +22,7 @@ function normalizeOptions(options) {
   options.mode = mode || 'development';
   options.includes = includes || [];
   options.log = log !== undefined ? log : true;
-  options.watch = sync ? true : watch;
+  options.watch = sync ? false : watch;
 
   return options;
 }
@@ -75,7 +75,7 @@ function getWebpackEntries(options, extension) {
       key = key + '/' + name + '.' + extension;
     }
 
-    entries[key] = sync ? ['webpack-dev-server/client?http://0.0.0.0:3001', file] : [file];
+    entries[key] = sync ? ['webpack-dev-server/client?http://0.0.0.0:3001', 'webpack/hot/dev-server', file] : [file];
   })
 
   return entries;
