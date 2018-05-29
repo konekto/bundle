@@ -1,25 +1,45 @@
 const Promise = require('bluebird');
 const webpack = require('webpack');
+const WebpackDevServer = require("webpack-dev-server");
 
 // export
 module.exports = _webpack;
 
 function _webpack(config, options) {
 
-  const {log, watch, mode} = options;
+  const {log, watch, mode, sync, destination} = options;
 
   let watching;
   let taskFn;
 
+  const hotPlugins = sync ? [
+    new webpack.NamedModulesPlugin(),
+    new webpack.HotModuleReplacementPlugin()
+  ] : [];
+
+  const output = sync ? {
+    ...config.output,
+    publicPath: 'http://localhost:3001'
+  } : config.output
+
   config = {
     ...config,
+    output,
     plugins: [
       ...config.plugins,
       new webpack.DefinePlugin({NODE_ENV: JSON.stringify(mode)}),
+      ...hotPlugins
     ]
   }
 
+  console.log(config.entry)
+
   const instance = webpack(config);
+
+  if(sync) {
+
+    return starDevServer(instance, options);
+  }
 
   if (watch) {
 
@@ -64,6 +84,26 @@ function _webpack(config, options) {
 
       return instance;
     })
+}
+
+function starDevServer(compiler, options) {
+
+  const server = new WebpackDevServer(compiler, {
+    hot: true,
+    contentBase: options.destination,
+    publicPath: 'http://localhost:3001'
+  });
+
+  return new Promise((resolve, reject) => {
+
+    server.listen(3001, '0.0.0.0', function(err) {
+
+      if(err) return reject(err);
+
+      console.log('dev server started!');
+      resolve(server);
+    });
+  })
 }
 
 

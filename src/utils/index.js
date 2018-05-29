@@ -1,6 +1,11 @@
 const path = require('path');
 const glob = require('glob');
 
+const extensionMap = {
+  '.styl': 'css',
+  '.jsx': 'js'
+};
+
 // export
 module.exports = {getSourceFiles, getIncludeFiles, getWebpackEntries, normalizeOptions}
 
@@ -11,12 +16,13 @@ module.exports = {getSourceFiles, getIncludeFiles, getWebpackEntries, normalizeO
  */
 function normalizeOptions(options) {
 
-  let {cwd, mode, includes, log} = options;
+  let {cwd, mode, includes, log, sync, watch} = options;
 
   options.cwd = path.resolve(cwd);
   options.mode = mode || 'development';
   options.includes = includes || [];
   options.log = log !== undefined ? log : true;
+  options.watch = sync ? true : watch;
 
   return options;
 }
@@ -48,24 +54,32 @@ function getIncludeFiles(options) {
 /**
  *  get functional webpack entries from sources
  * @param options
+ * @param extension
  */
-function getWebpackEntries(options) {
+function getWebpackEntries(options, extension) {
 
-  const {cwd} = options;
+  const {cwd, loader, sync} = options;
   const sourcefiles = getSourceFiles(options);
   const entries = {};
 
   sourcefiles.forEach((file)=> {
 
-    const {dir, name} = path.parse(file);
-    const key = path.relative(cwd, dir) + '/' + name;
+    const {dir, name, ext} = path.parse(file);
 
-    entries[key] = file;
+    if(!checkExtension(ext, extension)) return;
+
+    let key = path.relative(cwd, dir);
+
+    if(!loader) {
+
+      key = key + '/' + name + '.' + extension;
+    }
+
+    entries[key] = sync ? ['webpack-dev-server/client?http://0.0.0.0:3001', file] : [file];
   })
 
   return entries;
 }
-
 
 
 function getFiles(sources, cwd) {
@@ -75,6 +89,11 @@ function getFiles(sources, cwd) {
     const sourcePath = path.resolve(cwd, source);
     const files = glob.hasMagic(sourcePath) ? glob.sync(sourcePath) : [sourcePath];
 
-    return prev.concat(files);
+    return [...prev, ...files];
   }, [])
+}
+
+function checkExtension(before, after) {
+
+  return extensionMap[before] === after;
 }

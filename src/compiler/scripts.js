@@ -3,12 +3,6 @@ const webpack = require('../webpack');
 const {getWebpackEntries, normalizeOptions} = require('../utils')
 const Promise = require('bluebird');
 
-const loaderRule = {
-  test: /index\.jsx$/,
-  exclude: /node_modules/,
-  loader: path.resolve(__dirname, './loaders/client.js')
-};
-
 const webpackConfig = {
 
   cache: true,
@@ -19,7 +13,10 @@ const webpackConfig = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        loader: 'babel-loader'
+        loader: 'babel-loader',
+        options: {
+          cacheDirectory: true
+        }
       }
     ]
   },
@@ -28,34 +25,35 @@ const webpackConfig = {
   ]
 };
 
+// exports
+module.exports = compileScripts;
+module.exports.getWebpackConfig = getWebpackConfig;
+
 /**
  * compile scripts given the options
  * @param options
  * @returns {PromiseLike<T> | Promise<T>}
  */
-module.exports = function compileScripts(options) {
+function compileScripts(options) {
+
+  return webpack(getWebpackConfig(options), options);
+}
+
+
+function getWebpackConfig(options) {
 
   const {destination, mode, loader} = normalizeOptions(options);
 
-  const entries = getWebpackEntries(options);
+  const entries = getWebpackEntries(options, 'js');
 
-
-  const config = {
+  return {
     ...webpackConfig,
     mode,
     entry: entries,
     output: {
       path: path.resolve(destination),
-      filename: '[name].js'
+      filename: loader ? '[name]/client.js' : '[name]'
     },
     plugins : []
   }
-
-  // add loader rule
-  if(loader) {
-
-    config.module.rules = [loaderRule, ...config.module.rules];
-  }
-
-  return webpack(config, options);
 }

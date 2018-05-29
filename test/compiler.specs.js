@@ -17,7 +17,7 @@ describe('compiler specs', function() {
       .then(done, done)
   })
 
-  describe.only('scripts', function() {
+  describe('scripts', function() {
 
     it('should compile a jsx file', function(done) {
 
@@ -33,22 +33,6 @@ describe('compiler specs', function() {
         })
         .catch(done)
     });
-
-    it('should use the client loader', function(done) {
-
-      compileScripts({
-        loader: true,
-        sources: ['./parent/index.jsx'],
-        destination: './test/tmp',
-        cwd: './test/stubs'
-      })
-        .then(() => {
-
-          assert(fs.existsSync('./test/tmp/parent/index.js'))
-          done();
-        })
-        .catch(done)
-    })
 
     it('should compile using globbing', function(done) {
 
@@ -70,7 +54,6 @@ describe('compiler specs', function() {
     it('should watch files for changes', function(done) {
 
       compileScripts({
-        loader: true,
         watch: true,
         sources: ['./*.jsx'],
         destination: './test/tmp',
@@ -103,7 +86,6 @@ describe('compiler specs', function() {
     it('should trigger event for changes', function(done) {
 
       compileScripts({
-        loader: true,
         watch: true,
         sources: ['./*.jsx'],
         destination: './test/tmp',
@@ -169,23 +151,6 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should use the styles loader', (done)=> {
-
-      compileStyles({
-        loader: true,
-        sources: ['./parent/styles.styl'],
-        destination: './test/tmp',
-        cwd: './test/stubs'
-      })
-        .then(()=> {
-
-          assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/styles.css')))
-
-          done()
-        })
-        .catch(done)
-    })
-
     it('should inlude base styles', (done)=> {
 
       compileStyles({
@@ -245,7 +210,6 @@ describe('compiler specs', function() {
 
       compileStyles({
 
-        loader: true,
         watch: true,
         sources: ['./with-imports.styl'],
         destination: './test/tmp',
@@ -289,7 +253,7 @@ describe('compiler specs', function() {
 
       compile({
         watch: true,
-        sources: ['./*.*'],
+        sources: ['./*.jsx', './*.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
@@ -314,6 +278,23 @@ describe('compiler specs', function() {
 
             })
 
+        })
+        .catch(done)
+    })
+
+    it('should use the loaders', function(done) {
+
+      compile({
+        loader: true,
+        sources: ['./parent/index.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(() => {
+
+          assert(fs.existsSync('./test/tmp/parent/client.js'))
+          assert(fs.existsSync('./test/tmp/parent/styles.css'))
+          done();
         })
         .catch(done)
     })

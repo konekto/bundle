@@ -7,22 +7,40 @@ const webpackConfig = {
 
   cache: true,
   mode: 'development',
-  devtool: 'cheap-module-source-map'
+  devtool: 'cheap-module-source-map',
 };
 
-module.exports = function compileStyles(options) {
+// exports
+module.exports = compileStyles;
+module.exports.getWebpackConfig = getWebpackConfig;
 
-  const {destination, mode, cwd} = normalizeOptions(options);
+function compileStyles(options) {
 
-  const entries = getWebpackEntries(options);
+  return webpack(getWebpackConfig(options), options);
+}
 
-  const config = {
+function getWebpackConfig(options) {
+
+  const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
+
+  const entries = getWebpackEntries(options, 'css');
+
+  const useCSSLoader = mode === 'development' && sync;
+
+  const plugins = useCSSLoader ? [] : [
+    new MiniCssExtractPlugin({
+      filename: loader ? '[name]/styles.css' : '[name]',
+      chunkFilename: '[id].css'
+    })
+  ]
+
+  return {
     ...webpackConfig,
     mode,
     entry: entries,
     output: {
       path: path.resolve(destination),
-      filename: '[name].css.tmp'
+      filename: '[name].tmp'
     },
     module: {
       rules: [
@@ -30,8 +48,7 @@ module.exports = function compileStyles(options) {
           test: /\.styl$/,
           exclude: /node_modules/,
           use: [
-            MiniCssExtractPlugin.loader,
-            // 'style-loader',
+            useCSSLoader? 'style-loader' : MiniCssExtractPlugin.loader,
             'css-loader',
             {
               loader: 'stylus-loader',
@@ -44,13 +61,6 @@ module.exports = function compileStyles(options) {
         }
       ]
     },
-    plugins : [
-      new MiniCssExtractPlugin({
-        filename: "[name].css",
-        chunkFilename: "[id].css"
-      })
-    ]
+    plugins
   }
-
-  return webpack(config, options);
 }
