@@ -5,8 +5,9 @@ EXPOSE 3010
 COPY . /bundle
 WORKDIR /bundle
 
-RUN npm install
+RUN npm i -g npm
+RUN npm ci
 
 WORKDIR /
 
-CMD ["./bundle/bin/index.js"]
+CMD /bundle/bin/index.js
