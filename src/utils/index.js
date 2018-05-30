@@ -75,7 +75,7 @@ function getWebpackEntries(options, extension) {
       key = key + '/' + name + '.' + extension;
     }
 
-    entries[key] = sync ? ['webpack-dev-server/client?http://0.0.0.0:3001', 'webpack/hot/dev-server', file] : [file];
+    entries[key] = sync ? ['webpack-dev-server/client?http://0.0.0.0:3010', file] : [file];
   })
 
   return entries;

@@ -2,5 +2,5 @@
   "sources" : ["page/client.jsx"],
   "destination": "test/tmp",
   "cwd": "test/stubs",
-  "sync": true
+  "sync": "http://localhost:8080"
 }
