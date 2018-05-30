@@ -8,6 +8,7 @@ WORKDIR /bundle
 RUN npm i -g npm
 RUN npm ci
 
-WORKDIR /
+RUN mkdir /app
+WORKDIR /app
 
 CMD /bundle/bin/index.js
