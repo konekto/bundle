@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const glob = require('glob');
 const Promise = require('bluebird');
+const polyfillPath = require.resolve('babel-polyfill');
 
 const loaderRule = {
   test: /index\.jsx$/,
@@ -19,7 +20,7 @@ const webpackConfig = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        loader: 'babel-loader'
+        loader: require.resolve('babel-loader')
       }
     ]
   },
@@ -53,7 +54,7 @@ module.exports = function compileScripts(options) {
       const {dir, name} = path.parse(file);
       const key = path.relative(cwd, dir) + '/' + name;
 
-      entries[key] = ['babel-polyfill', file];
+      entries[key] = [polyfillPath, file];
     })
   })
 
