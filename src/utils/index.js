@@ -1,6 +1,8 @@
 const path = require('path');
 const glob = require('glob');
 
+const {resolve} = require;
+
 const extensionMap = {
   '.styl': 'css',
   '.jsx': 'js'
@@ -75,7 +77,7 @@ function getWebpackEntries(options, extension) {
       key = key + '/' + name + '.' + extension;
     }
 
-    entries[key] = sync ? ['webpack-dev-server/client?http://0.0.0.0:3010', file] : [file];
+    entries[key] = sync ? [resolve('webpack-hot-middleware/client'), file] : [file];
   })
 
   return entries;

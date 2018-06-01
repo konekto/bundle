@@ -28,7 +28,7 @@ function compile(options) {
   const scriptsConfig = compileScripts.getWebpackConfig(options);
   const stylesConfig = compileStyles.getWebpackConfig(options);
 
-  const loaderRules = options.loader? [clientLoader, styleLoader] : [];
+  const loaderRules = options.loader? [styleLoader, clientLoader] : [];
 
   const config = {
 
@@ -44,13 +44,13 @@ function compile(options) {
     },
     module: {
       rules: [
-        ...loaderRules,
         ...stylesConfig.module.rules,
         ...scriptsConfig.module.rules,
+        ...loaderRules,
       ]
     },
     plugins: [
-      ...stylesConfig.plugins,
+      ...scriptsConfig.plugins,
       ...stylesConfig.plugins,
     ]
   }

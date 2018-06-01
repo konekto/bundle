@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('../webpack');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const {getWebpackEntries, getIncludeFiles, normalizeOptions} = require('../utils');
+const {resolve} = require;
 
 const webpackConfig = {
 
@@ -27,12 +28,15 @@ function getWebpackConfig(options) {
 
   const useCSSLoader = mode === 'development' && sync;
 
-  const plugins = useCSSLoader ? [] : [
+  const plugins = [
     new MiniCssExtractPlugin({
-      filename: loader ? '[name]/styles.css' : '[name]',
-      chunkFilename: '[id].css'
+      filename: loader ? '[name]/styles.css' : '[name]'
     })
   ]
+
+  const uses = useCSSLoader? [resolve('css-hot-loader'), MiniCssExtractPlugin.loader] : [MiniCssExtractPlugin.loader]
+
+  console.log(getIncludeFiles(options))
 
   return {
     ...webpackConfig,
@@ -48,12 +52,21 @@ function getWebpackConfig(options) {
           test: /\.styl$/,
           exclude: /node_modules/,
           use: [
-            useCSSLoader? 'style-loader' : MiniCssExtractPlugin.loader,
-            'css-loader',
+            ...uses,
+            resolve('css-loader'),
             {
-              loader: 'stylus-loader',
+              loader: resolve('postcss-loader'),
               options: {
-                paths: [cwd],
+                ident: 'postcss',
+                plugins: () => [
+                  require('autoprefixer')()
+                ]
+              }
+            },
+            {
+              loader: resolve('stylus-loader'),
+              options: {
+                paths: [cwd, path.resolve('./node_modules')],
                 import: getIncludeFiles(options)
               },
             },

@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('../webpack');
 const {getWebpackEntries, normalizeOptions} = require('../utils')
 const Promise = require('bluebird');
+const {resolve} = require;
 
 const webpackConfig = {
 
@@ -13,9 +14,9 @@ const webpackConfig = {
       {
         test: /\.jsx?$/,
         exclude: /node_modules/,
-        loader: 'babel-loader',
+        loader: resolve('babel-loader'),
         options: {
-          cacheDirectory: true
+          // cacheDirectory: true
         }
       }
     ]

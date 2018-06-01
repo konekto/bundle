@@ -122,13 +122,14 @@ describe('compiler specs', function() {
     it('should compile a .styl file', function(done) {
 
       compileStyles({
-        sources: ['./test.styl'],
+        sources: ['./test.styl', './parent/styles.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
         .then(()=> {
 
           assert(fs.existsSync('./test/tmp/test.css'));
+          assert(fs.existsSync('./test/tmp/parent/styles.css'));
           done()
         })
         .catch(done)
@@ -151,7 +152,8 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should inlude base styles', (done)=> {
+
+    it('should include base styles', (done)=> {
 
       compileStyles({
 
@@ -229,7 +231,7 @@ describe('compiler specs', function() {
     });
   })
 
-  describe('compile', function(){
+  describe.only('compile', function(){
 
     it('should compile both styles and scripts', function(done) {
 

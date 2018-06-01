@@ -1,6 +1,8 @@
 const Promise = require('bluebird');
 const webpack = require('webpack');
-const sync = require('../sync');
+const browserSync = require('../sync');
+const WriteFilePlugin = require('write-file-webpack-plugin');
+
 
 // export
 module.exports = _webpack;
@@ -14,7 +16,10 @@ function _webpack(config, options) {
 
   const hotPlugins = sync ? [
     new webpack.NamedModulesPlugin(),
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new WriteFilePlugin({
+      test: /^(?!.*(hot)).*/
+    })
   ] : [];
 
   const output = sync ? {
@@ -32,9 +37,12 @@ function _webpack(config, options) {
     ]
   }
 
+  console.log('entry', config.entry);
+  console.log('output', config.output);
+
   if(sync) {
 
-    return sync(config, options);
+    return browserSync(config, options);
   }
 
   const instance = webpack(config);
