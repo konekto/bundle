@@ -1,7 +1,4 @@
 const browserSync = require('browser-sync');
-const webpackDevMiddleware = require('webpack-dev-middleware');
-const webpackHotMiddleware = require('webpack-hot-middleware');
-const webpack = require('webpack');
 
 const defaultOptions = {
   port: 3010,
@@ -16,32 +13,27 @@ const defaultOptions = {
 };
 
 
-module.exports = function sync(config, options) {
-
-  const compiler = webpack(config);
+module.exports = function sync(instance, options) {
 
   options = Object.assign({}, defaultOptions, options, {
     proxy: {
       target: options.sync,
-      ws: true,
     },
-    middleware: [
-      webpackDevMiddleware(compiler, {
-        quiet: true,
-        path: config.output.path,
-        contentBase: config.output.path,
-        publicPath: config.output.publicPath,
-        stats: {
-          colors: true,
-        },
-      }),
-      webpackHotMiddleware(compiler, {
-        log: () => {},
-      }),
-    ],
   });
 
-  const bs = browserSync(options);
+  const bs = browserSync({
+
+    ...defaultOptions,
+    ...options,
+    proxy: {
+      target: options.sync
+    }
+  });
+
+  instance.onChange(()=> {
+
+    bs.reload();
+  })
 
   return Promise.resolve(bs);
 }

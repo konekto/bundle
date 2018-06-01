@@ -4,8 +4,12 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const {getWebpackEntries, getIncludeFiles, normalizeOptions} = require('../utils');
 const {resolve} = require;
 
-const webpackConfig = {
 
+const styleLoader = {
+  loader: path.resolve(__dirname, './loaders/style.js')
+}
+
+const webpackConfig = {
   cache: true,
   mode: 'development',
   devtool: 'cheap-module-source-map',
@@ -26,7 +30,6 @@ function getWebpackConfig(options) {
 
   const entries = getWebpackEntries(options, 'css');
 
-  const useCSSLoader = mode === 'development' && sync;
 
   const plugins = [
     new MiniCssExtractPlugin({
@@ -34,9 +37,9 @@ function getWebpackConfig(options) {
     })
   ]
 
-  const uses = useCSSLoader? [resolve('css-hot-loader'), MiniCssExtractPlugin.loader] : [MiniCssExtractPlugin.loader]
+  const styleLoaders = loader ? [styleLoader] : [];
 
-  console.log(getIncludeFiles(options))
+  const uses = [MiniCssExtractPlugin.loader]
 
   return {
     ...webpackConfig,
@@ -66,10 +69,12 @@ function getWebpackConfig(options) {
             {
               loader: resolve('stylus-loader'),
               options: {
-                paths: [cwd, path.resolve('./node_modules')],
-                import: getIncludeFiles(options)
+                'include css': true,
+                paths: [cwd],
+                import: getIncludeFiles(options),
               },
             },
+            ...styleLoaders
           ],
         }
       ]

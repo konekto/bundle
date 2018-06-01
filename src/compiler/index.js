@@ -3,18 +3,6 @@ const compileScripts = require('./scripts');
 const compileStyles = require('./styles');
 const webpack = require('../webpack');
 
-const clientLoader = {
-  test: /index\.jsx$/,
-  exclude: /node_modules/,
-  loader: path.resolve(__dirname, './loaders/client.js')
-};
-
-const styleLoader = {
-  test: /index\.jsx$/,
-  exclude: /node_modules/,
-  loader: path.resolve(__dirname, './loaders/style.js')
-};
-
 // export
 module.exports = {compile, compileStyles, compileScripts};
 
@@ -27,8 +15,6 @@ function compile(options) {
   const {destination, loader} = options;
   const scriptsConfig = compileScripts.getWebpackConfig(options);
   const stylesConfig = compileStyles.getWebpackConfig(options);
-
-  const loaderRules = options.loader? [styleLoader, clientLoader] : [];
 
   const config = {
 
@@ -46,7 +32,6 @@ function compile(options) {
       rules: [
         ...stylesConfig.module.rules,
         ...scriptsConfig.module.rules,
-        ...loaderRules,
       ]
     },
     plugins: [

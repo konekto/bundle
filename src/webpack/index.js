@@ -14,13 +14,6 @@ function _webpack(config, options) {
   let watching;
   let taskFn;
 
-  const hotPlugins = sync ? [
-    new webpack.NamedModulesPlugin(),
-    new webpack.HotModuleReplacementPlugin(),
-    new WriteFilePlugin({
-      test: /^(?!.*(hot)).*/
-    })
-  ] : [];
 
   const output = sync ? {
     ...config.output
@@ -33,16 +26,7 @@ function _webpack(config, options) {
     plugins: [
       ...config.plugins,
       new webpack.DefinePlugin({NODE_ENV: JSON.stringify(mode)}),
-      ...hotPlugins
     ]
-  }
-
-  console.log('entry', config.entry);
-  console.log('output', config.output);
-
-  if(sync) {
-
-    return browserSync(config, options);
   }
 
   const instance = webpack(config);
@@ -86,6 +70,11 @@ function _webpack(config, options) {
         instance.onChange = createOnChangeListener(instance);
         instance.removeChangeListener = createRemoveChangeListener(instance);
         createFilesHasChangedPromise(instance);
+      }
+
+      if(sync) {
+
+        return browserSync(instance, options);
       }
 
       return instance;

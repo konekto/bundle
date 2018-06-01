@@ -24,7 +24,7 @@ function normalizeOptions(options) {
   options.mode = mode || 'development';
   options.includes = includes || [];
   options.log = log !== undefined ? log : true;
-  options.watch = sync ? false : watch;
+  options.watch = sync ? true : watch;
 
   return options;
 }
@@ -77,7 +77,7 @@ function getWebpackEntries(options, extension) {
       key = key + '/' + name + '.' + extension;
     }
 
-    entries[key] = sync ? [resolve('webpack-hot-middleware/client'), file] : [file];
+    entries[key] = [file];
   })
 
   return entries;

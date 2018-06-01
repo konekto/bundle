@@ -1,27 +1,48 @@
 const fs = require('fs');
 const path = require('path');
-
+const dependencyTree = require('dependency-tree')
+const Promise = require('bluebird');
 
 module.exports = function styleLoader(content) {
-
-  const {resourcePath} = this;
-  const {dir} = path.parse(resourcePath);
-  const styleFile = path.resolve(dir, 'styles.styl');
-
-  console.log('file', styleFile)
 
   this.cacheable();
   const callback = this.async();
 
+  const {resourcePath} = this;
+  const {dir} = path.parse(resourcePath);
+  const jsxFile = path.resolve(dir, 'index.jsx');
 
-  fs.access(styleFile, fs.constants.F_OK, (err) => {
+  const deps = dependencyTree.toList({
+    filename: jsxFile,
+    directory: './',
+    filter: path => path.indexOf('node_modules') === -1
+  })
+    .slice(0, -1)
+    .map((dep) => {
 
-    console.log('err', err);
+      const {dir: depDir} = path.parse(dep);
+      return  path.resolve(depDir, 'styles.styl');
+    })
 
-    if(err) return callback(null, content);
+  return Promise
+    .filter(deps, exists)
+    .then((existingDeps)=> {
 
-    this.addDependency(styleFile);
+      const imports = existingDeps.map((d)=> `@import "${d}";`).join('\n');
 
-    callback(null, `require("${styleFile}");\n${content}`);
-  });
+      callback(null, `${imports}\n${content}`);
+
+      return null;
+    })
 };
+
+function exists(file) {
+
+  return new Promise((resolve) => {
+
+    fs.access(file, fs.constants.F_OK, (err)=> {
+
+      return resolve(!err)
+    })
+  })
+}

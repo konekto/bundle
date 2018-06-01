@@ -4,23 +4,17 @@ const {getWebpackEntries, normalizeOptions} = require('../utils')
 const Promise = require('bluebird');
 const {resolve} = require;
 
+const clientLoader = {
+  test: /index\.jsx$/,
+  exclude: /node_modules/,
+  loader: path.resolve(__dirname, './loaders/client.js')
+};
+
 const webpackConfig = {
 
   cache: true,
   mode: 'development',
   devtool: 'cheap-module-source-map',
-  module: {
-    rules: [
-      {
-        test: /\.jsx?$/,
-        exclude: /node_modules/,
-        loader: resolve('babel-loader'),
-        options: {
-          // cacheDirectory: true
-        }
-      }
-    ]
-  },
   plugins: [
 
   ]
@@ -47,6 +41,8 @@ function getWebpackConfig(options) {
 
   const entries = getWebpackEntries(options, 'js');
 
+  const clientLoaders = loader? [clientLoader] : [];
+
   return {
     ...webpackConfig,
     mode,
@@ -54,6 +50,19 @@ function getWebpackConfig(options) {
     output: {
       path: path.resolve(destination),
       filename: loader ? '[name]/client.js' : '[name]'
+    },
+    module: {
+      rules: [
+        {
+          test: /\.jsx?$/,
+          exclude: /node_modules/,
+          loader: resolve('babel-loader'),
+          options: {
+            cacheDirectory: true
+          }
+        },
+        ...clientLoaders
+      ]
     },
     plugins : []
   }

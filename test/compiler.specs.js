@@ -8,7 +8,7 @@ const exec = Promise.promisify(cp.exec);
 
 describe('compiler specs', function() {
 
-  this.timeout(4000);
+  this.timeout(6000);
 
   beforeEach((done)=> {
 
@@ -231,7 +231,7 @@ describe('compiler specs', function() {
     });
   })
 
-  describe.only('compile', function(){
+  describe('compile', function(){
 
     it('should compile both styles and scripts', function(done) {
 
@@ -241,7 +241,7 @@ describe('compiler specs', function() {
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then(()=> {
+        .then((instance)=> {
 
           assert(fs.existsSync('./test/tmp/parent/styles.css'));
           assert(fs.existsSync('./test/tmp/parent/index.js'));
@@ -288,14 +288,16 @@ describe('compiler specs', function() {
 
       compile({
         loader: true,
-        sources: ['./parent/index.jsx'],
+        sources: ['./parent/styles.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
         .then(() => {
 
-          assert(fs.existsSync('./test/tmp/parent/client.js'))
+          // assert(fs.existsSync('./test/tmp/parent/client.js'))
           assert(fs.existsSync('./test/tmp/parent/styles.css'))
+          assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/styles.css', 'utf8')))
+
           done();
         })
         .catch(done)
