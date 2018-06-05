@@ -1,6 +1,6 @@
 {
   "name": "@konekto/bundle",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Simple web bundler",
   "homepage": "https://github.com/konekto/bundle",
   "main": "index.js",
