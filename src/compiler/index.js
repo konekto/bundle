@@ -22,7 +22,7 @@ function compile(options) {
     ...stylesConfig,
     output: {
       path: path.resolve(destination),
-      filename: loader ? '[name]/client.js' : '[name]'
+      filename: '[name]'
     },
     entry: {
       ...scriptsConfig.entry,

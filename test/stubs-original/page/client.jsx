@@ -1,8 +1,5 @@
 import React from 'react';
 import { render } from 'react-dom';
-import Template from '../parent/index.jsx';
-import { hot } from 'react-hot-loader'
-
-const App = hot(module)(Template);
+import App from '../parent/index.jsx';
 
 render(<App text={'Hello World'}/>, document.getElementById('root'));

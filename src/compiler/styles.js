@@ -33,7 +33,7 @@ function getWebpackConfig(options) {
 
   const plugins = [
     new MiniCssExtractPlugin({
-      filename: loader ? '[name]/styles.css' : '[name]'
+      filename: '[name]'
     })
   ]
 

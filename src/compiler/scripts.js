@@ -49,7 +49,7 @@ function getWebpackConfig(options) {
     entry: entries,
     output: {
       path: path.resolve(destination),
-      filename: loader ? '[name]/client.js' : '[name]'
+      filename: '[name]'
     },
     module: {
       rules: [
