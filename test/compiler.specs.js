@@ -269,7 +269,7 @@ describe('compiler specs', function() {
           return instance.filesHasChanged
             .then(()=> {
 
-              assert(/changed/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
+              assert(/changed/.test(fs.readFileSync('./test/tmp/test.js', 'utf8')));
 
               replaceInFile('./test/stubs/test.styl', 'red', 'blue');
 
@@ -288,13 +288,13 @@ describe('compiler specs', function() {
 
       compile({
         loader: true,
-        sources: ['./parent/styles.styl'],
+        sources: ['./parent/styles.styl', './parent/client.jsx'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
         .then(() => {
 
-          // assert(fs.existsSync('./test/tmp/parent/client.js'))
+          assert(fs.existsSync('./test/tmp/parent/client.js'))
           assert(fs.existsSync('./test/tmp/parent/styles.css'))
           assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/styles.css', 'utf8')))
 

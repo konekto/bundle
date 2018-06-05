@@ -72,10 +72,7 @@ function getWebpackEntries(options, extension) {
 
     let key = path.relative(cwd, dir);
 
-    if(!loader) {
-
-      key = key + '/' + name + '.' + extension;
-    }
+    key = key + '/' + name + '.' + extension;
 
     entries[key] = [file];
   })
