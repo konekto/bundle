@@ -3,13 +3,12 @@ const fs = require('fs');
 const assert = require('assert');
 const cp= require('child_process');
 const Promise = require('bluebird');
-const {createServer} = require('http-server');
 
 const exec = Promise.promisify(cp.exec);
 
 describe('compiler specs', function() {
 
-  this.timeout(4000);
+  this.timeout(6000);
 
   beforeEach((done)=> {
 
@@ -35,22 +34,6 @@ describe('compiler specs', function() {
         .catch(done)
     });
 
-    it('should use the client loader', function(done) {
-
-      compileScripts({
-        loader: true,
-        sources: ['./parent/index.jsx'],
-        destination: './test/tmp',
-        cwd: './test/stubs'
-      })
-        .then(() => {
-
-          assert(fs.existsSync('./test/tmp/parent/index.js'))
-          done();
-        })
-        .catch(done)
-    })
-
     it('should compile using globbing', function(done) {
 
       compileScripts({
@@ -71,7 +54,6 @@ describe('compiler specs', function() {
     it('should watch files for changes', function(done) {
 
       compileScripts({
-        loader: true,
         watch: true,
         sources: ['./*.jsx'],
         destination: './test/tmp',
@@ -104,7 +86,6 @@ describe('compiler specs', function() {
     it('should trigger event for changes', function(done) {
 
       compileScripts({
-        loader: true,
         watch: true,
         sources: ['./*.jsx'],
         destination: './test/tmp',
@@ -141,13 +122,14 @@ describe('compiler specs', function() {
     it('should compile a .styl file', function(done) {
 
       compileStyles({
-        sources: ['./test.styl'],
+        sources: ['./test.styl', './parent/styles.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
         .then(()=> {
 
           assert(fs.existsSync('./test/tmp/test.css'));
+          assert(fs.existsSync('./test/tmp/parent/styles.css'));
           done()
         })
         .catch(done)
@@ -170,24 +152,8 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should use the styles loader', (done)=> {
 
-      compileStyles({
-        loader: true,
-        sources: ['./parent/styles.styl'],
-        destination: './test/tmp',
-        cwd: './test/stubs'
-      })
-        .then(()=> {
-
-          assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/styles.css')))
-
-          done()
-        })
-        .catch(done)
-    })
-
-    it('should inlude base styles', (done)=> {
+    it('should include base styles', (done)=> {
 
       compileStyles({
 
@@ -208,7 +174,6 @@ describe('compiler specs', function() {
 
       compileStyles({
 
-        loader: true,
         watch: true,
         includes: ['./vars.styl'],
         sources: ['./main.styl'],
@@ -217,6 +182,7 @@ describe('compiler specs', function() {
       })
         .then((instance)=> {
 
+          console.log('#f00')
           assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')));
 
           replaceInFile('./test/stubs/vars.styl', 'red', 'blue');
@@ -224,6 +190,7 @@ describe('compiler specs', function() {
           return instance.filesHasChanged
             .then(() => {
 
+              console.log('#00f')
               assert(/#00f/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
 
               replaceInFile('./test/stubs/vars.styl', 'blue', 'red');
@@ -231,10 +198,10 @@ describe('compiler specs', function() {
               return instance.filesHasChanged
                 .then(() => {
 
+                  console.log('#f00')
                   assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
                 })
-                .then(()=> instance.close(), ()=> instance.close())
-            })
+            }).finally(()=> instance.close())
 
         })
         .then(()=> done())
@@ -245,7 +212,6 @@ describe('compiler specs', function() {
 
       compileStyles({
 
-        loader: true,
         watch: true,
         sources: ['./with-imports.styl'],
         destination: './test/tmp',
@@ -275,7 +241,7 @@ describe('compiler specs', function() {
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then(()=> {
+        .then((instance)=> {
 
           assert(fs.existsSync('./test/tmp/parent/styles.css'));
           assert(fs.existsSync('./test/tmp/parent/index.js'));
@@ -289,7 +255,7 @@ describe('compiler specs', function() {
 
       compile({
         watch: true,
-        sources: ['./*.*'],
+        sources: ['./*.jsx', './*.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
@@ -317,6 +283,25 @@ describe('compiler specs', function() {
         })
         .catch(done)
     })
+
+    it('should use the loaders', function(done) {
+
+      compile({
+        loader: true,
+        sources: ['./parent/styles.styl'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(() => {
+
+          // assert(fs.existsSync('./test/tmp/parent/client.js'))
+          assert(fs.existsSync('./test/tmp/parent/styles.css'))
+          assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/styles.css', 'utf8')))
+
+          done();
+        })
+        .catch(done)
+    })
   })
 })
 
@@ -325,5 +310,15 @@ function replaceInFile(file, from, to) {
 
   const content = fs.readFileSync(file, 'utf8');
 
-  fs.writeFileSync(file, content.replace(from, to));
+  console.log('replace');
+
+  setTimeout(()=> {
+
+    fs.writeFile(file, content.replace(from, to), (err)=> {
+
+      console.log('replaced');
+    });
+  }, 1000)
+
+
 }

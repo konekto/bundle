@@ -1,319 +1,84 @@
-const stylus = require('stylus');
-const dependencyTree = require('dependency-tree');
 const path = require('path');
-const glob = require('glob');
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
-const mkdirp = Promise.promisify(require('mkdirp'));
-const watcher = require('../watcher');
-const _ = require('lodash');
+const webpack = require('../webpack');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const {getWebpackEntries, getIncludeFiles, normalizeOptions} = require('../utils');
+const {resolve} = require;
 
-const stylusConfig = {
 
-  'include css': true,
-  paths: [
-    './node_modules',
-  ],
-  use: [
-    fileExist
+const styleLoader = {
+  loader: path.resolve(__dirname, './loaders/style.js')
+}
+
+const webpackConfig = {
+  cache: true,
+  mode: 'development',
+  devtool: 'cheap-module-source-map',
+};
+
+// exports
+module.exports = compileStyles;
+module.exports.getWebpackConfig = getWebpackConfig;
+
+function compileStyles(options) {
+
+  return webpack(getWebpackConfig(options), options);
+}
+
+function getWebpackConfig(options) {
+
+  const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
+
+  const entries = getWebpackEntries(options, 'css');
+
+
+  const plugins = [
+    new MiniCssExtractPlugin({
+      filename: loader ? '[name]/styles.css' : '[name]'
+    })
   ]
-}
 
-/**
- * Compile with options
- * @param options
- */
-module.exports = function compileStyles(options) {
-
-  let {watch} = options;
-
-  // TODO check paths
-
-  return compileSources(options)
-    .then(()=> {
-
-      if(!watch) return;
-
-      return watchSources(options);
-    })
-}
-
-/**
- * watch sources for changes
- */
-function watchSources(options) {
-
-  let {log} = options;
-
-  let deps = getWatchSources(options);
-
-  let instance;
-
-  log && console.log('start watching', deps);
-
-  return watcher(deps, (file) => {
-
-    // initial add event should be ignored
-    if(!instance) return;
-
-    log && console.log('change detected', file);
-
-    let newDeps = getWatchSources(options);
-
-    // we got some new files
-    if(newDeps.length !== deps.length) {
-
-      const filesToAdd = _.difference(newDeps, deps);
-      const filesToRemove = _.difference(deps, newDeps);
-
-      log && console.log('dependencies to add to watch', filesToAdd);
-      log && console.log('dependencies to remove from watch', filesToRemove);
-
-      instance.add(filesToAdd);
-      instance.unwatch(filesToRemove);
-
-      deps = newDeps;
-
-      log && console.log('watching ', deps);
-    }
-
-
-    return compileSources(options)
-      .then(()=> {
-
-        instance.callbacks.forEach(cb => cb());
-      });
-  })
-    .then((watcher) => {
-
-      instance = watcher;
-      instance.callbacks = [];
-      instance.onChange = (cb)=> instance.callbacks.push(cb);
-      instance.removeChangeListener = (cb)=> instance.callbacks = instance.callbacks.filter((fn) => fn !== cb)
-      createFilesHasChangedPromise(instance);
-
-      return instance;
-    })
-}
-
-function getWatchSources(options) {
-
-  let {sources, cwd, includes, loader} = options;
-
-  includes = includes || [];
-
-  const sourcesToWatch = sources.concat(includes);
-  const mappedSources = sourcesToWatch.map((s)=> path.resolve(cwd, s));
-  let deps = getDependencies(mappedSources);
-
-  if(loader) {
-
-    const loaderDeps = deps.reduce((prev, current)=> {
-
-      return prev.concat(getLoaderDependencies(current));
-    }, []);
-
-    deps = deps.concat(loaderDeps);
-    deps = _.uniq(deps);
-  }
-
-  return deps;
-}
-
-function compileSources(options) {
-
-  const {sources, cwd} = options;
-
-  return Promise.map(sources, (source) => {
-
-    source = path.resolve(cwd, source);
-
-    const files = glob.hasMagic(source) ? glob.sync(source) : [source];
-
-    return Promise.map(files, (file) => compile(file, options))
-  })
-}
-
-function getDestination(file, options) {
-
-  let {destination, cwd} = options;
-
-  const {dir, name} = path.parse(file);
-  const relative = path.relative(cwd, dir);
-  const key = (relative ? './' + relative : '.') + '/' + name + '.css';
-  return path.resolve(destination, key);
-}
-
-function compile(source, options) {
-
-  const dest = getDestination(source, options);
-  const stylusOptions = Object.assign({}, stylusConfig, {import: options.includes});
-
-  // add cwd to paths
-  if(stylusOptions.paths) {
-
-    stylusOptions.paths = [...stylusOptions.paths, options.cwd];
-  }
-
-  if(options.log) {
-
-    console.log('compiling', source);
-  }
-
-  return fs.readFileAsync(source, 'utf8')
-    .then((content) => {
-
-      const s = stylus(content);
-
-      // set the filename first
-      s.set('filename', source);
-
-      Object.keys(stylusOptions)
-        .forEach((key) => {
-
-          let value = stylusOptions[key];
-
-          if(!value) return;
-
-          if (key === 'use') {
-
-            if(!Array.isArray(value)) {
-
-              value = [value];
-            }
-
-            value.forEach((v) => s.use(v));
-            return;
-          }
-
-          if (key === 'use' || key === 'import') {
-
-            if(!Array.isArray(value)) {
-
-              value = [value];
-            }
-
-            value.forEach((v) => {
-
-              const resolvedPath = path.resolve(options.cwd, v);
-
-              s.import(v)
-            });
-            return;
-          }
-
-          s.set(key, value);
-        })
-
-        if (options.loader) {
-
-          const deps = getLoaderDependencies(source);
-
-          deps.forEach((dep) => s.import(dep));
-        }
-
-      return new Promise((resolve, reject) => {
-        s.render((err, content) => {
-
-          if (err) return reject(err);
-
-          const {dir} = path.parse(dest);
-
-          return mkdirp(dir)
-            .then(() => fs.writeFileAsync(dest, content))
-            .then(()=> {
-
-              if (options.log) {
-
-                console.log(`${dest} created!`)
+  const styleLoaders = loader ? [styleLoader] : [];
+
+  const uses = [MiniCssExtractPlugin.loader]
+
+  return {
+    ...webpackConfig,
+    mode,
+    entry: entries,
+    output: {
+      path: path.resolve(destination),
+      filename: '[name].tmp'
+    },
+    module: {
+      rules: [
+        {
+          test: /\.styl$/,
+          exclude: /node_modules/,
+          use: [
+            ...uses,
+            resolve('css-loader'),
+            {
+              loader: resolve('postcss-loader'),
+              options: {
+                ident: 'postcss',
+                plugins: () => [
+                  require('autoprefixer')()
+                ]
               }
-            })
-            .then(resolve)
-            .catch(reject)
-        })
-      })
-    })
-    .catch((err) => {
-
-      console.error(err);
-    })
-}
-
-
-function loader (style) {
-
-  const {options} = style;
-  const {filename} = options;
-
-  const deps = getLoaderDependencies(filename);
-
-  deps.forEach((dep) => style.import(dep));
-}
-
-function fileExist(style) {
-
-  const {options} = style;
-  const {filename} = options;
-  const {dir} = path.parse(filename);
-
-  style.define('file-exist', (p) => {
-
-    return fs.existsSync(path.relative(dir, p.val));
-  })
-}
-
-
-function createFilesHasChangedPromise(instance) {
-
-  instance.filesHasChanged = new Promise((resolve) => {
-
-    instance.callbacks.push(listener);
-
-    function listener() {
-
-      instance.removeChangeListener(listener);
-
-      process.nextTick(()=> createFilesHasChangedPromise(instance));
-      resolve();
-    }
-  })
-}
-
-function getLoaderDependencies(file) {
-
-  const {dir: fileDir} = path.parse(file);
-  const deps = getDependencies(path.resolve(fileDir, 'index.jsx'));
-
-  return deps.slice(0, -1)
-    .map((dep) => {
-
-      const {dir: depDir} = path.parse(dep);
-      return  path.resolve(depDir, 'styles.styl');
-    })
-    .filter((path)=> fs.existsSync(path))
-}
-
-function getDependencies(files) {
-
-  if(!Array.isArray(files)) {
-
-    files = [files];
+            },
+            {
+              loader: resolve('stylus-loader'),
+              options: {
+                'include css': true,
+                paths: [cwd],
+                import: getIncludeFiles(options),
+              },
+            },
+            ...styleLoaders
+          ],
+        }
+      ]
+    },
+    plugins
   }
-
-  const deps = files.reduce((prev, current)=> {
-
-    return prev.concat(_getDependencies(current));
-  }, []);
-
-  return _.uniq(deps);
-}
-
-function _getDependencies(file) {
-
-
-  return dependencyTree.toList({
-    filename: file,
-    directory: './',
-    filter: path => path.indexOf('node_modules') === -1
-  })
 }

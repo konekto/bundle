@@ -5,6 +5,8 @@ const replaceRegexp = /index\.jsx/g;
  * @param content
  * @returns {*}
  */
+
+
 module.exports = function viewPreloader(content) {
 
   this.cacheable();

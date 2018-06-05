@@ -1,4 +1,4 @@
-FROM node:9
+FROM node:8
 
 EXPOSE 3010
 
@@ -8,7 +8,6 @@ WORKDIR /bundle
 RUN npm i -g npm
 RUN npm ci
 
-RUN mkdir /app
 WORKDIR /app
 
-CMD /bundle/bin/index.js
+CMD ["/bundle/bin/index.js"]
