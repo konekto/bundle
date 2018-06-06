@@ -56,7 +56,7 @@ function getWebpackConfig(options) {
       publicPath: '/'
     },
     resolve: {
-      modules: [nodeModulesPath, "node_modules"]
+      modules: ["node_modules", nodeModulesPath]
     },
     module: {
       rules: [
