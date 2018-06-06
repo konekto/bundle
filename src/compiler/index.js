@@ -22,7 +22,8 @@ function compile(options) {
     ...stylesConfig,
     output: {
       path: path.resolve(destination),
-      filename: '[name]'
+      filename: '[name].js',
+      publicPath: '/'
     },
     entry: {
       ...scriptsConfig.entry,

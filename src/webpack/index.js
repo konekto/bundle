@@ -1,35 +1,38 @@
 const Promise = require('bluebird');
 const webpack = require('webpack');
 const browserSync = require('../sync');
-const WriteFilePlugin = require('write-file-webpack-plugin');
-
 
 // export
 module.exports = _webpack;
 
 function _webpack(config, options) {
 
-  const {log, watch, mode, sync, destination} = options;
+  const {log, watch, mode, sync} = options;
 
   let watching;
   let taskFn;
 
-
-  const output = sync ? {
-    ...config.output
-  } : config.output
+  const hotPlugins = sync ? [
+    new webpack.NamedModulesPlugin(),
+    new webpack.HotModuleReplacementPlugin(),
+  ]: [];
 
   config = {
     ...config,
     watch,
-    output,
     plugins: [
+      ...hotPlugins,
       ...config.plugins,
       new webpack.DefinePlugin({NODE_ENV: JSON.stringify(mode)}),
     ]
   }
 
   const instance = webpack(config);
+
+  if(sync) {
+
+    return browserSync(instance, config, options);
+  }
 
   if (watch) {
 

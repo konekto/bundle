@@ -1,4 +1,8 @@
 const browserSync = require('browser-sync');
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const webpackHotMiddleware = require('webpack-hot-middleware');
+
+const isNotHot = /^(?!.*(hot)).*/;
 
 const defaultOptions = {
   port: 3010,
@@ -13,27 +17,27 @@ const defaultOptions = {
 };
 
 
-module.exports = function sync(instance, options) {
-
-  options = Object.assign({}, defaultOptions, options, {
-    proxy: {
-      target: options.sync,
-    },
-  });
+module.exports = function sync(instance, config, options) {
 
   const bs = browserSync({
 
     ...defaultOptions,
-    ...options,
     proxy: {
-      target: options.sync
-    }
+      target: options.sync,
+      ws: true
+    },
+    middleware: [
+      webpackDevMiddleware(instance, {
+        publicPath: config.output.publicPath,
+        writeToDisk: (f) => isNotHot.test(f),
+        stats: { colors: true }
+      }),
+      webpackHotMiddleware(instance)
+    ]
   });
 
-  instance.onChange(()=> {
-
-    bs.reload();
-  })
+  // reload styles
+  instance.hooks.done.tap('BrowserSync', ()=> bs.reload('*.css'))
 
   return Promise.resolve(bs);
 }

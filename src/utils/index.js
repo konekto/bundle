@@ -60,7 +60,7 @@ function getIncludeFiles(options) {
  */
 function getWebpackEntries(options, extension) {
 
-  const {cwd, loader, sync} = options;
+  const {cwd, sync} = options;
   const sourcefiles = getSourceFiles(options);
   const entries = {};
 
@@ -70,11 +70,20 @@ function getWebpackEntries(options, extension) {
 
     if(!checkExtension(ext, extension)) return;
 
-    let key = path.relative(cwd, dir);
+    const key = path.relative(cwd, dir) + '/' + name;
+    const files = [file];
 
-    key = key + '/' + name + '.' + extension;
+    if(extension === 'js') {
 
-    entries[key] = [file];
+      files.unshift(resolve('babel-polyfill'));
+    }
+
+    if(sync) {
+
+      files.unshift(resolve('webpack-hot-middleware/client') + '?reload=true');
+    }
+
+    entries[key] = files;
   })
 
   return entries;

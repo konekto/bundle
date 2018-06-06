@@ -4,6 +4,8 @@ const {getWebpackEntries, normalizeOptions} = require('../utils')
 const Promise = require('bluebird');
 const {resolve} = require;
 
+const nodeModulesPath = path.resolve(__dirname, '../../node_modules');
+
 const clientLoader = {
   test: /index\.jsx$/,
   exclude: /node_modules/,
@@ -37,11 +39,12 @@ function compileScripts(options) {
 
 function getWebpackConfig(options) {
 
-  const {destination, mode, loader} = normalizeOptions(options);
+  const {destination, mode, loader, sync} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'js');
 
   const clientLoaders = loader? [clientLoader] : [];
+  const babelPlugins = sync? [resolve('react-hot-loader/babel')] : []
 
   return {
     ...webpackConfig,
@@ -49,7 +52,11 @@ function getWebpackConfig(options) {
     entry: entries,
     output: {
       path: path.resolve(destination),
-      filename: '[name]'
+      filename: '[name].js',
+      publicPath: '/'
+    },
+    resolve: {
+      modules: [nodeModulesPath, "node_modules"]
     },
     module: {
       rules: [
@@ -58,7 +65,8 @@ function getWebpackConfig(options) {
           exclude: /node_modules/,
           loader: resolve('babel-loader'),
           options: {
-            cacheDirectory: true
+            cacheDirectory: true,
+            plugins: babelPlugins
           }
         },
         ...clientLoaders

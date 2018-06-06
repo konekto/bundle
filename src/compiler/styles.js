@@ -33,7 +33,7 @@ function getWebpackConfig(options) {
 
   const plugins = [
     new MiniCssExtractPlugin({
-      filename: '[name]'
+      filename: '[name].css'
     })
   ]
 
@@ -47,7 +47,8 @@ function getWebpackConfig(options) {
     entry: entries,
     output: {
       path: path.resolve(destination),
-      filename: '[name].tmp'
+      filename: '[name].tmp',
+      publicPath: '/'
     },
     module: {
       rules: [
