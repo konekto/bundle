@@ -24,7 +24,6 @@ module.exports = function sync(instance, config, options) {
     ...defaultOptions,
     proxy: {
       target: options.sync,
-      ws: true
     },
     middleware: [
       webpackDevMiddleware(instance, {
