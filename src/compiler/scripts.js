@@ -39,12 +39,11 @@ function compileScripts(options) {
 
 function getWebpackConfig(options) {
 
-  const {destination, mode, loader, sync} = normalizeOptions(options);
+  const {destination, mode, loader} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'js');
 
   const clientLoaders = loader? [clientLoader] : [];
-  const babelPlugins = sync? [resolve('react-hot-loader/babel')] : []
 
   return {
     ...webpackConfig,
@@ -63,7 +62,6 @@ function getWebpackConfig(options) {
           loader: resolve('babel-loader'),
           options: {
             cacheDirectory: true,
-            plugins: babelPlugins
           }
         },
         ...clientLoaders
