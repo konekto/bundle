@@ -55,9 +55,6 @@ function getWebpackConfig(options) {
       filename: '[name].js',
       publicPath: '/'
     },
-    resolve: {
-      modules: ["node_modules", nodeModulesPath]
-    },
     module: {
       rules: [
         {
