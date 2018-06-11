@@ -11,7 +11,5 @@ module.exports = function viewPreloader(content) {
 
   this.cacheable();
 
-  const callback = this.async();
-
-  return process.nextTick(()=> callback(null, content.replace(replaceRegexp, 'client.jsx')));
+  return content.replace(replaceRegexp, 'client.jsx');
 };

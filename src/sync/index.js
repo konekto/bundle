@@ -19,6 +19,7 @@ const defaultOptions = {
 
 module.exports = function sync(instance, config, options) {
 
+
   const bs = browserSync({
 
     ...defaultOptions,
@@ -27,7 +28,7 @@ module.exports = function sync(instance, config, options) {
     },
     middleware: [
       webpackDevMiddleware(instance, {
-        publicPath: config.output.publicPath,
+        publicPath: config[0].output.publicPath,
         writeToDisk: (f) => isNotHot.test(f),
         stats: { colors: true }
       }),

@@ -10,7 +10,7 @@
   "scripts": {
     "test": "mocha",
     "start-server": "http-server -c-1 ./test/tmp",
-    "docker:push": "docker build -t bundle . && docker tag bundle konekto/bundle && docker push"
+    "docker:push": "docker build -t bundle . && docker tag bundle konekto/bundle && docker push konekto/bundle"
   },
   "author": "Haithem Bel Haj <haithem@konek.to>",
   "license": "ISC",

@@ -24,7 +24,7 @@ function normalizeOptions(options) {
   options.mode = mode || 'development';
   options.includes = includes || [];
   options.log = log !== undefined ? log : true;
-  options.watch = sync ? true : watch;
+  options.watch = sync ? false : watch;
 
   return options;
 }
@@ -76,11 +76,11 @@ function getWebpackEntries(options, extension) {
     if(extension === 'js') {
 
       files.unshift(resolve('babel-polyfill'));
-    }
 
-    if(sync) {
+      if(sync) {
 
-      files.unshift(resolve('webpack-hot-middleware/client') + '?reload=true');
+        files.unshift(resolve('webpack-hot-middleware/client'));
+      }
     }
 
     entries[key] = files;

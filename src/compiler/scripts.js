@@ -16,10 +16,7 @@ const webpackConfig = {
 
   cache: true,
   mode: 'development',
-  devtool: 'cheap-module-source-map',
-  plugins: [
-
-  ]
+  plugins: []
 };
 
 // exports
@@ -48,6 +45,7 @@ function getWebpackConfig(options) {
   return {
     ...webpackConfig,
     mode,
+    devtool: mode === 'development' ? 'eval' : 'nosources-source-map',
     entry: entries,
     output: {
       path: path.resolve(destination),

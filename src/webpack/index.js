@@ -7,7 +7,7 @@ module.exports = _webpack;
 
 function _webpack(config, options) {
 
-  const {log, watch, mode, sync} = options;
+  const {log, mode, watch, sync} = options;
 
   let watching;
   let taskFn;
@@ -17,15 +17,17 @@ function _webpack(config, options) {
     new webpack.HotModuleReplacementPlugin(),
   ]: [];
 
-  config = {
-    ...config,
-    watch,
-    plugins: [
+  config = Array.isArray(config) ? config : [config];
+
+  config.forEach((conf) =>{
+
+    conf.plugins = [
       ...hotPlugins,
-      ...config.plugins,
+      ...conf.plugins,
       new webpack.DefinePlugin({NODE_ENV: JSON.stringify(mode)}),
     ]
-  }
+  });
+
 
   const instance = webpack(config);
 

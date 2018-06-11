@@ -28,7 +28,9 @@ module.exports = function styleLoader(content) {
     .filter(deps, exists)
     .then((existingDeps)=> {
 
-      const imports = existingDeps.map((d)=> `@import "${d}";`).join('\n');
+      // existingDeps.forEach((d)=> this.addDependency(d));
+
+      const imports = existingDeps.map((d)=> `@require "${d}";`).join('\n');
 
       callback(null, `${imports}\n${content}`);
 

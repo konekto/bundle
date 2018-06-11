@@ -12,7 +12,6 @@ const styleLoader = {
 const webpackConfig = {
   cache: true,
   mode: 'development',
-  devtool: 'cheap-module-source-map',
 };
 
 // exports
@@ -45,10 +44,14 @@ function getWebpackConfig(options) {
     ...webpackConfig,
     mode,
     entry: entries,
+    devtool: mode === 'development' ? 'eval' : 'nosources-source-map',
     output: {
       path: path.resolve(destination),
       filename: '[name].tmp',
       publicPath: '/'
+    },
+    resolve: {
+      extensions: ['.js', '.jsx', '.styl']
     },
     module: {
       rules: [
@@ -72,6 +75,7 @@ function getWebpackConfig(options) {
               options: {
                 'include css': true,
                 paths: [cwd],
+                preferPathResolver: 'webpack',
                 import: getIncludeFiles(options),
               },
             },
