@@ -1,15 +1,15 @@
 {
   "presets": [
-    ["@babel/preset-env", {
+    ["env", {
       "targets": {
         "browsers": ["last 2 versions", "ie >= 11"]
       }
     }],
-    "@babel/preset-react"
+    "react"
   ],
   "plugins": [
     "react-hot-loader/babel",
-    "@babel/plugin-proposal-export-default-from",
-    "@babel/plugin-proposal-object-rest-spread"
+    "transform-export-default",
+    "syntax-object-rest-spread"
   ]
 }
