@@ -1,4 +1,3 @@
-const path = require('path');
 const compileScripts = require('./scripts');
 const compileStyles = require('./styles');
 const webpack = require('../webpack');
