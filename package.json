@@ -10,7 +10,8 @@
   "scripts": {
     "test": "mocha",
     "start-server": "http-server -c-1 ./test/tmp",
-    "docker:push": "docker build -t bundle . && docker tag bundle konekto/bundle && docker push konekto/bundle"
+    "docker:push": "docker build -t bundle . && docker tag bundle konekto/bundle && docker push konekto/bundle",
+    "docker:build": "docker build -t bundle ."
   },
   "author": "Haithem Bel Haj <haithem@konek.to>",
   "license": "ISC",
@@ -36,6 +37,7 @@
     "meow": "^4.0.0",
     "mini-css-extract-plugin": "^0.4.0",
     "mkdirp": "^0.5.1",
+    "npm-programmatic": "0.0.11",
     "postcss-loader": "^2.1.5",
     "rc": "^1.2.8",
     "react": "^16.4.0",

@@ -9,11 +9,6 @@ const styleLoader = {
   loader: path.resolve(__dirname, './loaders/style.js')
 }
 
-const webpackConfig = {
-  cache: true,
-  mode: 'development',
-};
-
 // exports
 module.exports = compileStyles;
 module.exports.getWebpackConfig = getWebpackConfig;
@@ -28,8 +23,8 @@ function getWebpackConfig(options) {
   const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'css');
-
-
+  if(!entries.length) return;
+  
   const plugins = [
     new MiniCssExtractPlugin({
       filename: '[name].css'
@@ -41,8 +36,8 @@ function getWebpackConfig(options) {
   const uses = [MiniCssExtractPlugin.loader]
 
   return {
-    ...webpackConfig,
     mode,
+    cache: true,
     entry: entries,
     devtool: mode === 'development' ? 'eval' : 'nosources-source-map',
     output: {

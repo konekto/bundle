@@ -1,13 +1,17 @@
 FROM node:9-alpine
 
 EXPOSE 3010
+ENV BUNDLE_INSTALL /bundle
+WORKDIR $BUNDLE_INSTALL
 
-COPY . /bundle
-WORKDIR /bundle
+COPY ./package.json $BUNDLE_INSTALL/package.json
+COPY ./package-lock.json $BUNDLE_INSTALL/package-lock.json
 
 RUN npm i -g npm
 RUN npm ci
 
-WORKDIR /app
+COPY . $BUNDLE_INSTALL
+
+# WORKDIR /app
 
 CMD ["/bundle/bin/index.js"]

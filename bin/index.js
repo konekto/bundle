@@ -3,7 +3,10 @@
 
 const meow = require('meow');
 const rc = require('rc');
+const path = require('path');
+
 const {compile} = require('../src/compiler');
+
 
 let instance;
 
@@ -44,11 +47,103 @@ function init_cli() {
       }
     }
   );
-
-  const rcConfig = rc('bundle', {
+  console.log('Starting your bundler experience!');
+  console.log('Working directory:');
+  console.log(' ', process.cwd());
+  const defaultConfig = {
     log: true,
     loader: true,
-  });
+    sources: ['*.js'],
+    cwd: ".",
+    destination: "./build",
+    sync: "http:localhost:8080"
+  };
+  const rcConfig = rc('bundle', defaultConfig);
+  console.log();
+  console.log('Looking for .bundlerc ...');
+  if(rcConfig.config === undefined) {
+    console.log(' No .bundlerc found in working directory or above.');
+    console.log(' Will use defaults: ');
+    console.log(rcConfig);
+    console.log('To make your own .bundlerc copy the following line and place it in a file in your project:')
+    console.log(JSON.stringify(defaultConfig));
+  }
+  else {
+    console.log('  found: ', rcConfig.config);
+  }
+  console.log();
+
+  console.log('Looking for .babelrc...');
+  const babelDefaults = {
+    "presets": [
+      ["env", {
+        "targets": {
+          "browsers": ["last 2 versions", "ie >= 11"]
+        }
+      }],
+      "react"
+    ],
+    "plugins": [
+      "react-hot-loader/babel",
+      "syntax-object-rest-spread",
+      "transform-export-default"
+    ]
+  };
+  
+  const babelConfig = rc('babel', babelDefaults);
+  if(babelConfig.config === undefined) {
+    console.log('  No .babelrc found in working directory or above.');
+    console.log('  Will use defaults: ');
+    console.log();
+    console.log(babelDefaults);
+    console.log();
+    console.log('To make your own .babelrc, copy the following line and place it in a file in your project:')
+    console.log(JSON.stringify(babelDefaults));
+    console.log('This will also enable you to use to babel auto install');
+  }
+  else {
+    console.log('  found: ', babelConfig.config);
+    console.log('  Ensuring babel dependencies installed:');
+    function babelConfigToPackagename(preset, middle) {
+      let name;
+      if(Array.isArray(preset)) name = preset[0];
+      else name = preset;
+
+      const packagename = "babel-"+middle+"-"+name.split('/')[0];
+      return packagename
+    }
+  
+    const babelPresets = babelConfig.presets.map((p) => babelConfigToPackagename(p, 'preset'));
+    const babelPlugins = babelConfig.plugins.map((p) => babelConfigToPackagename(p, 'plugin'));
+    const npm = require('npm-programmatic');
+    const targetWorkingDir = path.dirname(babelConfig.config);
+    console.log('  Needed dependencies: ');
+    console.log('  Will install into: ', targetWorkingDir);
+    const babelDeps = babelPresets.concat(babelPlugins);
+    babelDeps.forEach((each) => {
+      console.log('   ', each);
+      let shouldInstall;
+      try {
+        let resolved = require.resolve(each);
+        console.log('Already found ', each, ' will not install(', resolved,')');
+        shouldInstall = false;
+      }
+      catch(err) {
+        shouldInstall = true;
+      }
+      if(shouldInstall) {
+        console.log('Will attempt to install ', each);
+        npm.install([each], {
+          cwd: targetWorkingDir,
+          save: true,
+        })
+        .then((a) => console.log('Successfully installed, ',a))
+        .catch((e) => console.log('Error installing, ', e));
+      }
+    });
+  }
+  console.log();
+  console.log();
 
   const {flags} = cli;
 
