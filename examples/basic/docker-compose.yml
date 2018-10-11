@@ -1,0 +1,11 @@
+version: '3'
+services:
+  bundle:
+    image: bundle
+    working_dir: /app/src
+    ports:
+      - "3010:3010"
+      - "3001:3001"
+    volumes:
+      - .:/app
+    restart: always
