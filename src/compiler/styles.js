@@ -23,7 +23,7 @@ function getWebpackConfig(options) {
   const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'css');
-  if(!entries.length) return;
+  //if(!entries.length) return;
   
   const plugins = [
     new MiniCssExtractPlugin({
