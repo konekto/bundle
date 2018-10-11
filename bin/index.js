@@ -56,7 +56,6 @@ function init_cli() {
     sources: ['*.js'],
     cwd: ".",
     destination: "./build",
-    sync: "http:localhost:8080"
   };
   const rcConfig = rc('bundle', defaultConfig);
   console.log();
@@ -115,31 +114,33 @@ function init_cli() {
   
     const babelPresets = babelConfig.presets.map((p) => babelConfigToPackagename(p, 'preset'));
     const babelPlugins = babelConfig.plugins.map((p) => babelConfigToPackagename(p, 'plugin'));
-    const npm = require('npm-programmatic');
+    //const npm = require('npm-programmatic');
+    const npm = require('npmi');
     const targetWorkingDir = path.dirname(babelConfig.config);
     console.log('  Needed dependencies: ');
     console.log('  Will install into: ', targetWorkingDir);
     const babelDeps = babelPresets.concat(babelPlugins);
     babelDeps.forEach((each) => {
       console.log('   ', each);
-      let shouldInstall;
-      try {
-        let resolved = require.resolve(each);
-        console.log('Already found ', each, ' will not install(', resolved,')');
-        shouldInstall = false;
-      }
-      catch(err) {
-        shouldInstall = true;
-      }
-      if(shouldInstall) {
-        console.log('Will attempt to install ', each);
-        npm.install([each], {
-          cwd: targetWorkingDir,
-          save: true,
-        })
-        .then((a) => console.log('Successfully installed, ',a))
-        .catch((e) => console.log('Error installing, ', e));
-      }
+      npm({name: each, path: targetWorkingDir}, (err, res) => { if(err) console.error(error); console.log(res)});
+      //let shouldInstall;
+      //try {
+       // let resolved = require.resolve(each);
+        //console.log('Already found ', each, ' will not install(', resolved,')');
+       // shouldInstall = false;
+     // }
+      //catch(err) {
+       // shouldInstall = true;
+      //}
+    //  if(shouldInstall) {
+     //   console.log('Will attempt to install ', each);
+    //  npm.install([each], {
+     //     cwd: targetWorkingDir,
+       //   save: true,
+        //})
+      //  .then((a) => console.log('Successfully installed, ',a))
+      //  .catch((e) => console.log('Error installing, ', e));
+      //}
     });
   }
   console.log();
@@ -176,7 +177,9 @@ function init_cli() {
     })
 }
 
+
 function close() {
+  console.log('Closing instance explicityly.');
 
   instance && instance.close && instance.close();
 }

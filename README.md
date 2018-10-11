@@ -15,8 +15,9 @@ Configure babel with your `.babelrc` and your good to go.
 
 ```js
 {
-  "cwd": "./src" , //parent folder   
-  "destination": "./build" //destination folder,
+  "cwd": "./src" , //parent folder of the sources
+  "destination": "./build" //destination folder, relative to working dir of
+  bundle/index.js call
   "sources": ["**/*.jsx", "**/*.styl"], //source glogs to compile relative to cwd,
   "watch": true, //watch files,
   "loader": true, //activate auto component loader
@@ -24,5 +25,6 @@ Configure babel with your `.babelrc` and your good to go.
   "log": true //activate logging
 }
 ``` 
+
 
 See `bundle --help` for equivalent counterparts cli arguments.

@@ -13,5 +13,5 @@ RUN npm ci
 COPY . $BUNDLE_INSTALL
 
 # WORKDIR /app
-
-CMD ["/bundle/bin/index.js"]
+RUN ln -s /bundle/bin/index.js /usr/bin/bundle
+CMD ["bundle"]

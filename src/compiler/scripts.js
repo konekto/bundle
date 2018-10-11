@@ -41,7 +41,7 @@ function getWebpackConfig(options) {
   console.log('  destination: ', destination);
   console.log('  entry: ', entries);
   console.log();
-  return {
+  const config = {
     mode: mode,
     devtool: mode === 'development' ? 'eval' : 'nosources-source-map',
     entry: entries,
@@ -65,5 +65,7 @@ function getWebpackConfig(options) {
       ]
     },
     plugins : []
-  }
+  };
+  console.log(config);
+  return config
 }
