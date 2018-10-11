@@ -123,24 +123,6 @@ function init_cli() {
     babelDeps.forEach((each) => {
       console.log('   ', each);
       npm({name: each, path: targetWorkingDir}, (err, res) => { if(err) console.error(error); console.log(res)});
-      //let shouldInstall;
-      //try {
-       // let resolved = require.resolve(each);
-        //console.log('Already found ', each, ' will not install(', resolved,')');
-       // shouldInstall = false;
-     // }
-      //catch(err) {
-       // shouldInstall = true;
-      //}
-    //  if(shouldInstall) {
-     //   console.log('Will attempt to install ', each);
-    //  npm.install([each], {
-     //     cwd: targetWorkingDir,
-       //   save: true,
-        //})
-      //  .then((a) => console.log('Successfully installed, ',a))
-      //  .catch((e) => console.log('Error installing, ', e));
-      //}
     });
   }
   console.log();
