@@ -13,7 +13,8 @@ function compile(options) {
 
   const scriptsConfig = compileScripts.getWebpackConfig(options);
   const stylesConfig = compileStyles.getWebpackConfig(options);
-  const configs = [scriptsConfig];
+  const configs = [];
+  if(scriptsConfig) configs.push(scriptsConfig);
   if(stylesConfig) configs.push(stylesConfig);
 
   return webpack(configs, options);
