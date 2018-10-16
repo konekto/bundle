@@ -88,10 +88,10 @@ function getWebpackEntries(options, extension) {
         files.unshift(resolve('webpack-hot-middleware/client'));
       }
     }
-
+    
     entries[key] = files;
   })
-
+  console.log('  Generated entries: ', entries);
   return entries;
 }
 

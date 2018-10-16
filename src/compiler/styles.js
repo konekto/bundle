@@ -23,7 +23,12 @@ function getWebpackConfig(options) {
   const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'css');
-  //if(!entries.length) return;
+  console.log('Entries received where: ', entries);
+  if(!Object.keys(entries).length) {
+    console.log('Got no entries will not generate styles config', entries);
+    return;
+  }
+
   
   const plugins = [
     new MiniCssExtractPlugin({

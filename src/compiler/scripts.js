@@ -33,6 +33,10 @@ function getWebpackConfig(options) {
   const {destination, mode, loader} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'js');
+  if(!Object.keys(entries).length) {
+    console.log(' Got no entries will not include script config');
+    return;
+  }
 
   const clientLoaders = loader? [clientLoader] : [];
   console.log();
