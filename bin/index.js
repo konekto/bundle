@@ -122,7 +122,7 @@ function init_cli() {
     const babelDeps = babelPresets.concat(babelPlugins);
     babelDeps.forEach((each) => {
       console.log('   ', each);
-      npm({name: each, path: targetWorkingDir}, (err, res) => { if(err) console.error(error); console.log(res)});
+      npm({name: each, path: targetWorkingDir}, (err, res) => { if(err) console.error(err); console.log(res)});
     });
   }
   console.log();
