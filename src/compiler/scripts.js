@@ -24,6 +24,13 @@ module.exports.getWebpackConfig = getWebpackConfig;
  */
 function compileScripts(options) {
 
+  const entries = getWebpackEntries(options, 'js');
+
+  if(!Object.keys(entries).length) {
+    console.log('Got no entries');
+    return;
+  }
+
   return webpack(getWebpackConfig(options), options);
 }
 
@@ -33,18 +40,16 @@ function getWebpackConfig(options) {
   const {destination, mode, loader} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'js');
-  if(!Object.keys(entries).length) {
-    console.log(' Got no entries will not include script config');
-    return;
-  }
 
   const clientLoaders = loader? [clientLoader] : [];
+
   console.log();
   console.log('Generating webpack config...');
   console.log('  mode: ', mode);
   console.log('  destination: ', destination);
   console.log('  entry: ', entries);
   console.log();
+
   const config = {
     mode: mode,
     devtool: mode === 'development' ? 'eval' : 'nosources-source-map',

@@ -15,21 +15,22 @@ module.exports.getWebpackConfig = getWebpackConfig;
 
 function compileStyles(options) {
 
+  const entries = getWebpackEntries(options, 'css');
+
+  if(!Object.keys(entries).length) {
+
+    console.log('Got no entries');
+    return;
+  }
+
   return webpack(getWebpackConfig(options), options);
 }
 
 function getWebpackConfig(options) {
 
   const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
-
   const entries = getWebpackEntries(options, 'css');
-  console.log('Entries received where: ', entries);
-  if(!Object.keys(entries).length) {
-    console.log('Got no entries will not generate styles config', entries);
-    return;
-  }
 
-  
   const plugins = [
     new MiniCssExtractPlugin({
       filename: '[name].css'

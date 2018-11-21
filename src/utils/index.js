@@ -71,7 +71,7 @@ function getWebpackEntries(options, extension) {
     const {dir, name, ext} = path.parse(file);
     console.log(   'file: ', file);
     if(!checkExtension(ext, extension)) {
-      ('  extension not permitted: ', ext);
+      console.log('   extension not permitted: ', ext);
       return
     }
 
