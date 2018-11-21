@@ -40,7 +40,6 @@ function getSourceFiles(options) {
   const {sources, cwd} = options;
   console.log('  Generating source files from sources: ', sources, ' in dir ', cwd);
   const files = getFiles(sources, cwd);
-  if (!files.length) throw new Error('Your sources definition, ['+sources+'] did not match any files in, '+cwd);
   return files
 }
 
@@ -68,7 +67,7 @@ function getWebpackEntries(options, extension) {
   const entries = {};
   console.log('  Generating Webpack entries from sourcefiles: ', sourcefiles);
   sourcefiles.forEach((file)=> {
-      
+
     const {dir, name, ext} = path.parse(file);
     console.log(   'file: ', file);
     if(!checkExtension(ext, extension)) {
@@ -88,7 +87,7 @@ function getWebpackEntries(options, extension) {
         files.unshift(resolve('webpack-hot-middleware/client'));
       }
     }
-    
+
     entries[key] = files;
   })
   console.log('  Generated entries: ', entries);
