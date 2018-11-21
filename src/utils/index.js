@@ -5,7 +5,8 @@ const {resolve} = require;
 
 const extensionMap = {
   '.styl': 'css',
-  '.jsx': 'js'
+  '.jsx': 'js',
+  '.js': 'js'
 };
 
 // export
@@ -37,8 +38,10 @@ function normalizeOptions(options) {
 function getSourceFiles(options) {
 
   const {sources, cwd} = options;
-
-  return getFiles(sources, cwd);
+  console.log('  Generating source files from sources: ', sources, ' in dir ', cwd);
+  const files = getFiles(sources, cwd);
+  if (!files.length) throw new Error('Your sources definition, ['+sources+'] did not match any files in, '+cwd);
+  return files
 }
 
 /**
@@ -63,12 +66,15 @@ function getWebpackEntries(options, extension) {
   const {cwd, sync} = options;
   const sourcefiles = getSourceFiles(options);
   const entries = {};
-
+  console.log('  Generating Webpack entries from sourcefiles: ', sourcefiles);
   sourcefiles.forEach((file)=> {
-
+      
     const {dir, name, ext} = path.parse(file);
-
-    if(!checkExtension(ext, extension)) return;
+    console.log(   'file: ', file);
+    if(!checkExtension(ext, extension)) {
+      ('  extension not permitted: ', ext);
+      return
+    }
 
     const key = path.relative(cwd, dir) + '/' + name;
     const files = [file];
@@ -82,10 +88,10 @@ function getWebpackEntries(options, extension) {
         files.unshift(resolve('webpack-hot-middleware/client'));
       }
     }
-
+    
     entries[key] = files;
   })
-
+  console.log('  Generated entries: ', entries);
   return entries;
 }
 

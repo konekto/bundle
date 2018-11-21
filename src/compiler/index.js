@@ -13,7 +13,17 @@ function compile(options) {
 
   const scriptsConfig = compileScripts.getWebpackConfig(options);
   const stylesConfig = compileStyles.getWebpackConfig(options);
+  const configs = [];
+  if(scriptsConfig) {
+    configs.push(scriptsConfig);
+    console.log('Adding scripts config: ', scriptsConfig);
+  }
+  if(stylesConfig) {
+    configs.push(stylesConfig);
+    console.log('Adding style config: ', stylesConfig);
+  }
+  if(!stylesConfig && !scriptsConfig) console.log('No config loaded');
 
-  return webpack([scriptsConfig, stylesConfig], options);
+  return webpack(configs, options);
 }
 

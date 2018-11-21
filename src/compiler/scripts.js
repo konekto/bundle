@@ -12,12 +12,6 @@ const clientLoader = {
   loader: path.resolve(__dirname, './loaders/client.js')
 };
 
-const webpackConfig = {
-
-  cache: true,
-  mode: 'development',
-  plugins: []
-};
 
 // exports
 module.exports = compileScripts;
@@ -39,12 +33,20 @@ function getWebpackConfig(options) {
   const {destination, mode, loader} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'js');
+  if(!Object.keys(entries).length) {
+    console.log(' Got no entries will not include script config');
+    return;
+  }
 
   const clientLoaders = loader? [clientLoader] : [];
-
-  return {
-    ...webpackConfig,
-    mode,
+  console.log();
+  console.log('Generating webpack config...');
+  console.log('  mode: ', mode);
+  console.log('  destination: ', destination);
+  console.log('  entry: ', entries);
+  console.log();
+  const config = {
+    mode: mode,
     devtool: mode === 'development' ? 'eval' : 'nosources-source-map',
     entry: entries,
     output: {
@@ -52,6 +54,7 @@ function getWebpackConfig(options) {
       filename: '[name].js',
       publicPath: '/'
     },
+    cache: true,
     module: {
       rules: [
         {
@@ -66,5 +69,7 @@ function getWebpackConfig(options) {
       ]
     },
     plugins : []
-  }
+  };
+  console.log(config);
+  return config
 }

@@ -9,11 +9,6 @@ const styleLoader = {
   loader: path.resolve(__dirname, './loaders/style.js')
 }
 
-const webpackConfig = {
-  cache: true,
-  mode: 'development',
-};
-
 // exports
 module.exports = compileStyles;
 module.exports.getWebpackConfig = getWebpackConfig;
@@ -28,8 +23,13 @@ function getWebpackConfig(options) {
   const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
 
   const entries = getWebpackEntries(options, 'css');
+  console.log('Entries received where: ', entries);
+  if(!Object.keys(entries).length) {
+    console.log('Got no entries will not generate styles config', entries);
+    return;
+  }
 
-
+  
   const plugins = [
     new MiniCssExtractPlugin({
       filename: '[name].css'
@@ -41,8 +41,8 @@ function getWebpackConfig(options) {
   const uses = [MiniCssExtractPlugin.loader]
 
   return {
-    ...webpackConfig,
     mode,
+    cache: true,
     entry: entries,
     devtool: mode === 'development' ? 'eval' : 'nosources-source-map',
     output: {
