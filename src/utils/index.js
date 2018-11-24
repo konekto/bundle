@@ -33,12 +33,15 @@ function normalizeOptions(options) {
 /**
  * Get file paths from sources
  * @param options
+ * @param ext
  * @returns {*}
  */
-function getSourceFiles(options) {
+function getSourceFiles(options, ext) {
 
   const {sources, cwd} = options;
-  return getFiles(sources, cwd);
+  const files = getFiles(sources, cwd);
+
+  return files.filter((f)=> getExtension(f) === ext);
 }
 
 /**
@@ -63,20 +66,13 @@ function getIncludeFiles(options, ext) {
 function getWebpackEntries(options, extension) {
 
   const {cwd, sync} = options;
-  const sourcefiles = getSourceFiles(options);
+  const sourcefiles = getSourceFiles(options, extension);
   const includeFiles = getIncludeFiles(options, extension);
   const entries = {};
 
-  console.log('  Generating Webpack entries from sourcefiles: ', sourcefiles);
-
   sourcefiles.forEach((file)=> {
 
-    const {dir, name, ext} = path.parse(file);
-    console.log(   'file: ', file);
-    if(!checkExtension(ext, extension)) {
-      console.log('   extension not permitted: ', ext);
-      return
-    }
+    const {dir, name} = path.parse(file);
 
     const key = path.relative(cwd, dir) + '/' + name;
     const files = includeFiles.length ? [...includeFiles, file] : [file];
@@ -93,7 +89,6 @@ function getWebpackEntries(options, extension) {
 
     entries[key] = files;
   })
-  console.log('  Generated entries: ', entries);
   return entries;
 }
 
@@ -107,11 +102,6 @@ function getFiles(sources, cwd) {
 
     return [...prev, ...files];
   }, [])
-}
-
-function checkExtension(before, after) {
-
-  return extensionMap[before] === after;
 }
 
 function getExtension(file) {

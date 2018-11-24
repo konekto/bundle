@@ -36,12 +36,12 @@ function getWebpackConfig(options) {
 
   const clientLoaders = loader? [clientLoader] : [];
 
-  console.log();
-  console.log('Generating webpack config...');
+  console.log("");
+  console.log('Generating scripts webpack config...');
   console.log('  mode: ', mode);
   console.log('  destination: ', destination);
   console.log('  entry: ', entries);
-  console.log();
+  console.log("");
 
   return {
     mode: mode,

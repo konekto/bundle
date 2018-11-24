@@ -60,7 +60,7 @@ function init_cli() {
   };
   const rcConfig = rc('bundle', defaultConfig);
 
-  console.log();
+  console.log("");
   console.log('Looking for .bundlerc ...');
 
   if(rcConfig.config === undefined) {
@@ -73,7 +73,7 @@ function init_cli() {
   else {
     console.log('  found: ', rcConfig.config);
   }
-  console.log();
+  console.log("");
 
   console.log('Looking for .babelrc...');
 
@@ -98,9 +98,9 @@ function init_cli() {
   if(babelConfig.config === undefined) {
     console.log('  No .babelrc found in working directory or above.');
     console.log('  Will use defaults: ');
-    console.log();
+    console.log("");
     console.log(babelDefaults);
-    console.log();
+    console.log("");
     console.log('To make your own .babelrc, copy the following line and place it in a file in your project:')
     console.log(JSON.stringify(babelDefaults));
     console.log('This will also enable you to use to babel auto install');
@@ -125,8 +125,8 @@ function init_cli() {
       npm({name: each, path: targetWorkingDir}, (err, res) => { if(err) console.error(err); console.log(res)});
     });
   }
-  console.log();
-  console.log();
+  console.log("");
+  console.log("");
 
   const {flags} = cli;
 

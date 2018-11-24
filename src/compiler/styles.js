@@ -31,7 +31,14 @@ function getWebpackConfig(options) {
 
   const styleLoaders = loader ? [styleLoader] : [];
 
-  const uses = [MiniCssExtractPlugin.loader]
+  const uses = [MiniCssExtractPlugin.loader];
+
+  console.log("");
+  console.log('Generating styles webpack config...');
+  console.log('  mode: ', mode);
+  console.log('  destination: ', destination);
+  console.log('  entry: ', entries);
+  console.log("");
 
   return {
     mode,

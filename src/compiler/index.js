@@ -18,7 +18,7 @@ function compile(options) {
   if(Object.keys(scriptsConfig.entry).length) {
 
     configs.push(scriptsConfig);
-    console.log('Adding style config: ', scriptsConfig);
+    console.log('Adding scripts config: ', scriptsConfig);
 
   } else {
 
@@ -32,7 +32,7 @@ function compile(options) {
 
   } else {
 
-    console.log('No entries for scripts');
+    console.log('No entries for styles');
   }
 
   return webpack(configs, options);
