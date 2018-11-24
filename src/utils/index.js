@@ -38,7 +38,6 @@ function normalizeOptions(options) {
 function getSourceFiles(options) {
 
   const {sources, cwd} = options;
-  console.log('  Generating source files from sources: ', sources, ' in dir ', cwd);
   return getFiles(sources, cwd);
 }
 
