@@ -50,6 +50,7 @@ function init_cli() {
   console.log('Starting your bundler experience!');
   console.log('Working directory:');
   console.log(' ', process.cwd());
+
   const defaultConfig = {
     log: true,
     loader: true,
@@ -58,8 +59,10 @@ function init_cli() {
     destination: "./build",
   };
   const rcConfig = rc('bundle', defaultConfig);
+
   console.log();
   console.log('Looking for .bundlerc ...');
+
   if(rcConfig.config === undefined) {
     console.log(' No .bundlerc found in working directory or above.');
     console.log(' Will use defaults: ');
@@ -73,6 +76,7 @@ function init_cli() {
   console.log();
 
   console.log('Looking for .babelrc...');
+
   const babelDefaults = {
     "presets": [
       ["env", {
@@ -84,12 +88,13 @@ function init_cli() {
     ],
     "plugins": [
       "react-hot-loader/babel",
-      "syntax-object-rest-spread",
+      "transform-object-rest-spread",
       "transform-export-default"
     ]
   };
-  
+
   const babelConfig = rc('babel', babelDefaults);
+
   if(babelConfig.config === undefined) {
     console.log('  No .babelrc found in working directory or above.');
     console.log('  Will use defaults: ');
@@ -101,25 +106,20 @@ function init_cli() {
     console.log('This will also enable you to use to babel auto install');
   }
   else {
+
     console.log('  found: ', babelConfig.config);
     console.log('  Ensuring babel dependencies installed:');
-    function babelConfigToPackagename(preset, middle) {
-      let name;
-      if(Array.isArray(preset)) name = preset[0];
-      else name = preset;
 
-      const packagename = "babel-"+middle+"-"+name.split('/')[0];
-      return packagename
-    }
-  
     const babelPresets = babelConfig.presets.map((p) => babelConfigToPackagename(p, 'preset'));
     const babelPlugins = babelConfig.plugins.map((p) => babelConfigToPackagename(p, 'plugin'));
-    //const npm = require('npm-programmatic');
     const npm = require('npmi');
     const targetWorkingDir = path.dirname(babelConfig.config);
+
     console.log('  Needed dependencies: ');
     console.log('  Will install into: ', targetWorkingDir);
+
     const babelDeps = babelPresets.concat(babelPlugins);
+
     babelDeps.forEach((each) => {
       console.log('   ', each);
       npm({name: each, path: targetWorkingDir}, (err, res) => { if(err) console.error(err); console.log(res)});
@@ -159,6 +159,13 @@ function init_cli() {
     })
 }
 
+function babelConfigToPackagename(preset, middle) {
+  let name;
+  if(Array.isArray(preset)) name = preset[0];
+  else name = preset;
+
+  return "babel-"+middle+"-"+name.split('/')[0];
+}
 
 function close() {
   console.log('Closing instance explicityly.');

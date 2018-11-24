@@ -51,6 +51,23 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
+    it('should include scripts', function(done) {
+
+      compileScripts({
+        includes: ['./global.js'],
+        sources: ['./test.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(() => {
+
+          assert(fs.existsSync('./test/tmp/test.js'));
+          assert(/HELLO/.test(fs.readFileSync('./test/tmp/test.js', 'utf8')));
+          done();
+        })
+        .catch(done)
+    })
+
     it('should watch files for changes', function(done) {
 
       compileScripts({

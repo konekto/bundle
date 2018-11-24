@@ -15,14 +15,6 @@ module.exports.getWebpackConfig = getWebpackConfig;
 
 function compileStyles(options) {
 
-  const entries = getWebpackEntries(options, 'css');
-
-  if(!Object.keys(entries).length) {
-
-    console.log('Got no entries');
-    return;
-  }
-
   return webpack(getWebpackConfig(options), options);
 }
 
@@ -77,7 +69,7 @@ function getWebpackConfig(options) {
                 'include css': true,
                 paths: [cwd],
                 preferPathResolver: 'webpack',
-                import: getIncludeFiles(options),
+                import: getIncludeFiles(options, 'css'),
               },
             },
             ...styleLoaders

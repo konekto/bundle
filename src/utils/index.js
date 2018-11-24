@@ -39,20 +39,21 @@ function getSourceFiles(options) {
 
   const {sources, cwd} = options;
   console.log('  Generating source files from sources: ', sources, ' in dir ', cwd);
-  const files = getFiles(sources, cwd);
-  return files
+  return getFiles(sources, cwd);
 }
 
 /**
  * Get file paths from includes
  * @param options
+ * @param ext
  * @returns {*}
  */
-function getIncludeFiles(options) {
+function getIncludeFiles(options, ext) {
 
   const {includes, cwd} = options;
+  const files = getFiles(includes, cwd);
 
-  return getFiles(includes, cwd);
+  return files.filter((f)=> getExtension(f) === ext);
 }
 
 /**
@@ -64,8 +65,11 @@ function getWebpackEntries(options, extension) {
 
   const {cwd, sync} = options;
   const sourcefiles = getSourceFiles(options);
+  const includeFiles = getIncludeFiles(options, extension);
   const entries = {};
+
   console.log('  Generating Webpack entries from sourcefiles: ', sourcefiles);
+
   sourcefiles.forEach((file)=> {
 
     const {dir, name, ext} = path.parse(file);
@@ -76,7 +80,7 @@ function getWebpackEntries(options, extension) {
     }
 
     const key = path.relative(cwd, dir) + '/' + name;
-    const files = [file];
+    const files = includeFiles.length ? [...includeFiles, file] : [file];
 
     if(extension === 'js') {
 
@@ -109,4 +113,10 @@ function getFiles(sources, cwd) {
 function checkExtension(before, after) {
 
   return extensionMap[before] === after;
+}
+
+function getExtension(file) {
+
+  const {ext} = path.parse(file);
+  return extensionMap[ext];
 }

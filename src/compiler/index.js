@@ -14,15 +14,26 @@ function compile(options) {
   const scriptsConfig = compileScripts.getWebpackConfig(options);
   const stylesConfig = compileStyles.getWebpackConfig(options);
   const configs = [];
-  if(scriptsConfig) {
+
+  if(Object.keys(scriptsConfig.entry).length) {
+
     configs.push(scriptsConfig);
-    console.log('Adding scripts config: ', scriptsConfig);
+    console.log('Adding style config: ', scriptsConfig);
+
+  } else {
+
+    console.log('No entries for scripts');
   }
-  if(stylesConfig) {
+
+  if(Object.keys(stylesConfig.entry).length) {
+
     configs.push(stylesConfig);
     console.log('Adding style config: ', stylesConfig);
+
+  } else {
+
+    console.log('No entries for scripts');
   }
-  if(!stylesConfig && !scriptsConfig) console.log('No config loaded');
 
   return webpack(configs, options);
 }

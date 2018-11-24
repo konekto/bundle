@@ -24,13 +24,6 @@ module.exports.getWebpackConfig = getWebpackConfig;
  */
 function compileScripts(options) {
 
-  const entries = getWebpackEntries(options, 'js');
-
-  if(!Object.keys(entries).length) {
-    console.log('Got no entries');
-    return;
-  }
-
   return webpack(getWebpackConfig(options), options);
 }
 
@@ -50,7 +43,7 @@ function getWebpackConfig(options) {
   console.log('  entry: ', entries);
   console.log();
 
-  const config = {
+  return {
     mode: mode,
     devtool: mode === 'development' ? 'eval' : 'nosources-source-map',
     entry: entries,
@@ -75,6 +68,4 @@ function getWebpackConfig(options) {
     },
     plugins : []
   };
-  console.log(config);
-  return config
 }
