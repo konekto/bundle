@@ -1,16 +1,21 @@
-const path = require('path');
-const glob = require('glob');
+const path = require("path");
+const glob = require("glob");
 
-const {resolve} = require;
+const { resolve } = require;
 
 const extensionMap = {
-  '.styl': 'css',
-  '.jsx': 'js',
-  '.js': 'js'
+  ".styl": "css",
+  ".jsx": "js",
+  ".js": "js"
 };
 
 // export
-module.exports = {getSourceFiles, getIncludeFiles, getWebpackEntries, normalizeOptions}
+module.exports = {
+  getSourceFiles,
+  getIncludeFiles,
+  getWebpackEntries,
+  normalizeOptions
+};
 
 /**
  * normalize options object
@@ -18,11 +23,10 @@ module.exports = {getSourceFiles, getIncludeFiles, getWebpackEntries, normalizeO
  * @returns {*}
  */
 function normalizeOptions(options) {
-
-  let {cwd, mode, includes, log, sync, watch} = options;
+  let { cwd, mode, includes, log, sync, watch } = options;
 
   options.cwd = path.resolve(cwd);
-  options.mode = mode || 'development';
+  options.mode = mode || "development";
   options.includes = includes || [];
   options.log = log !== undefined ? log : true;
   options.watch = sync ? false : watch;
@@ -37,11 +41,10 @@ function normalizeOptions(options) {
  * @returns {*}
  */
 function getSourceFiles(options, ext) {
-
-  const {sources, cwd} = options;
+  const { sources, cwd } = options;
   const files = getFiles(sources, cwd);
 
-  return files.filter((f)=> getExtension(f) === ext);
+  return files.filter(f => getExtension(f) === ext);
 }
 
 /**
@@ -51,11 +54,10 @@ function getSourceFiles(options, ext) {
  * @returns {*}
  */
 function getIncludeFiles(options, ext) {
-
-  const {includes, cwd} = options;
+  const { includes, cwd } = options;
   const files = getFiles(includes, cwd);
 
-  return files.filter((f)=> getExtension(f) === ext);
+  return files.filter(f => getExtension(f) === ext);
 }
 
 /**
@@ -64,48 +66,42 @@ function getIncludeFiles(options, ext) {
  * @param extension
  */
 function getWebpackEntries(options, extension) {
-
-  const {cwd, sync} = options;
+  const { cwd, sync } = options;
   const sourcefiles = getSourceFiles(options, extension);
   const includeFiles = getIncludeFiles(options, extension);
   const entries = {};
 
-  sourcefiles.forEach((file)=> {
+  sourcefiles.forEach(file => {
+    const { dir, name } = path.parse(file);
 
-    const {dir, name} = path.parse(file);
-
-    const key = path.relative(cwd, dir) + '/' + name;
+    const key = path.relative(cwd, dir) + "/" + name;
     const files = includeFiles.length ? [...includeFiles, file] : [file];
 
-    if(extension === 'js') {
+    if (extension === "js") {
+      files.unshift(resolve("@babel/polyfill"));
 
-      files.unshift(resolve('babel-polyfill'));
-
-      if(sync) {
-
-        files.unshift(resolve('webpack-hot-middleware/client'));
+      if (sync) {
+        files.unshift(resolve("webpack-hot-middleware/client"));
       }
     }
 
     entries[key] = files;
-  })
+  });
   return entries;
 }
 
-
 function getFiles(sources, cwd) {
-
   return sources.reduce((prev, source) => {
-
     const sourcePath = path.resolve(cwd, source);
-    const files = glob.hasMagic(sourcePath) ? glob.sync(sourcePath) : [sourcePath];
+    const files = glob.hasMagic(sourcePath)
+      ? glob.sync(sourcePath)
+      : [sourcePath];
 
     return [...prev, ...files];
-  }, [])
+  }, []);
 }
 
 function getExtension(file) {
-
-  const {ext} = path.parse(file);
+  const { ext } = path.parse(file);
   return extensionMap[ext];
 }

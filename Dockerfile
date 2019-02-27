@@ -1,4 +1,4 @@
-FROM node:9-alpine
+FROM node:11-alpine
 
 EXPOSE 3010
 ENV BUNDLE_INSTALL /bundle
@@ -12,6 +12,5 @@ RUN npm ci
 
 COPY . $BUNDLE_INSTALL
 
-# WORKDIR /app
 RUN ln -s /bundle/bin/index.js /usr/bin/bundle
 CMD ["bundle"]
