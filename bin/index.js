@@ -6,6 +6,8 @@ const rc = require("rc");
 const path = require("path");
 
 const { compile } = require("../src/compiler");
+const { load } = require("../src/config");
+const storybook = require("../src/storybook");
 
 let instance;
 
@@ -29,7 +31,8 @@ function init_cli() {
 			--cwd set cwd
 			--install install babel deps
 			--dest destination path
-			--src source glob
+      --src source glob
+      --storybook load storybook 
 			--mode production or development
 
 		Examples
@@ -50,32 +53,9 @@ function init_cli() {
   console.log("Working directory:");
   console.log(" ", process.cwd());
 
-  const defaultConfig = {
-    log: true,
-    loader: true,
-    sources: ["*.js"],
-    cwd: ".",
-    destination: "./build"
-  };
-  const rcConfig = rc("bundle", defaultConfig);
-
-  console.log("");
-  console.log("Looking for .bundlerc ...");
-
-  if (rcConfig.config === undefined) {
-    console.log(" No .bundlerc found in working directory or above.");
-    console.log(" Will use defaults: ");
-    console.log(rcConfig);
-    console.log(
-      "To make your own .bundlerc copy the following line and place it in a file in your project:"
-    );
-    console.log(JSON.stringify(defaultConfig));
-  } else {
-    console.log("  found: ", rcConfig.config);
-  }
-  console.log("");
-
   const { flags } = cli;
+  const rcConfig = load(flags);
+
   let init = Promise.resolve();
 
   if (flags.install) {
@@ -98,6 +78,10 @@ function init_cli() {
     ...rcConfig,
     ...flags
   };
+
+  if (config.storybook) {
+    storybook(config);
+  }
 
   init
     .then(() => compile(config))

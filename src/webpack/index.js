@@ -1,134 +1,114 @@
-const Promise = require('bluebird');
-const webpack = require('webpack');
-const browserSync = require('../sync');
+const Promise = require("bluebird");
+const webpack = require("webpack");
+const browserSync = require("../sync");
 
 // export
 module.exports = _webpack;
 
 function _webpack(config, options) {
-
-  const {log, mode, watch, sync} = options;
+  const { log, mode, watch, sync, destination } = options;
 
   let watching;
   let taskFn;
 
-  const hotPlugins = sync ? [
-    new webpack.NamedModulesPlugin(),
-    new webpack.HotModuleReplacementPlugin(),
-  ]: [];
+  const hotPlugins = sync
+    ? [
+        new webpack.NamedModulesPlugin(),
+        new webpack.HotModuleReplacementPlugin()
+      ]
+    : [];
 
   config = Array.isArray(config) ? config : [config];
 
-  config.forEach((conf) =>{
-
+  config.forEach(conf => {
     conf.plugins = [
       ...hotPlugins,
       ...conf.plugins,
-      new webpack.DefinePlugin({NODE_ENV: JSON.stringify(mode)}),
-    ]
+      new webpack.DefinePlugin({
+        NODE_ENV: JSON.stringify(mode)
+      })
+    ];
   });
-
 
   const instance = webpack(config);
 
-  if(sync) {
-
+  if (sync) {
     return browserSync(instance, config, options);
   }
 
   if (watch) {
-
-    taskFn = (cb)=> {
-
+    taskFn = cb => {
       watching = instance.watch({}, cb);
     };
-
   } else {
-
     taskFn = instance.run.bind(instance);
   }
 
   const fnPromise = Promise.promisify(taskFn);
 
-  return fnPromise()
-    .then((stats) => {
+  return fnPromise().then(stats => {
+    if (log) {
+      console.log(stats.toString({ colors: true }));
 
-      if(log) {
-
-        console.log(stats.toString({colors: true}));
-
-        if (stats.hasErrors()) {
-
-          console.error(stats.errors);
-        }
+      if (stats.hasErrors()) {
+        console.error(stats.errors);
       }
+    }
 
-      instance._options = options;
-      instance.stats = stats;
+    instance._options = options;
+    instance.stats = stats;
 
-      // add watching methods
-      if (watching) {
+    // add watching methods
+    if (watching) {
+      instance.watching = watching;
 
-        instance.watching = watching;
+      instance.close = () => new Promise(resolve => watching.close(resolve));
+      instance.onChange = createOnChangeListener(instance);
+      instance.removeChangeListener = createRemoveChangeListener(instance);
+      createFilesHasChangedPromise(instance);
+    }
 
-        instance.close = () => new Promise((resolve) => watching.close(resolve));
-        instance.onChange = createOnChangeListener(instance);
-        instance.removeChangeListener = createRemoveChangeListener(instance);
-        createFilesHasChangedPromise(instance);
-      }
+    if (sync) {
+      return browserSync(instance, options);
+    }
 
-      if(sync) {
-
-        return browserSync(instance, options);
-      }
-
-      return instance;
-    })
+    return instance;
+  });
 }
 
-
 function createFilesHasChangedPromise(instance) {
-
-  instance.onChange(()=> {
-
-    console.log('change detected')
+  instance.onChange(() => {
+    console.log("change detected");
 
     instance._resolve();
-    instance.filesHasChanged = new Promise((resolve) => {
-
+    instance.filesHasChanged = new Promise(resolve => {
       instance._resolve = resolve;
-    })
+    });
   });
 
-  instance.filesHasChanged = new Promise((resolve) => {
-
+  instance.filesHasChanged = new Promise(resolve => {
     instance._resolve = resolve;
   });
 }
 
 function createOnChangeListener(instance) {
+  const { watching, _options } = instance;
 
-    const {watching, _options} = instance;
+  instance._changeCallbacks = [];
+  watching.compiler.hooks.done.tap("done", stats => {
+    instance.stats = stats;
+    _options.log && console.log(stats.toString({ colors: true }));
 
-    instance._changeCallbacks = [];
-    watching.compiler.hooks.done.tap('done', (stats)=> {
+    instance._changeCallbacks.forEach(cb => cb(stats));
+  });
 
-      instance.stats = stats;
-      _options.log && console.log(stats.toString({colors: true}));
-
-      instance._changeCallbacks.forEach(cb => cb(stats))
-    })
-
-    return function addChangeCallback(cb) {
-
-      instance._changeCallbacks.push(cb);
-    }
+  return function addChangeCallback(cb) {
+    instance._changeCallbacks.push(cb);
+  };
 }
 
 function createRemoveChangeListener(instance) {
-
   return function removeChangeListener(cb) {
-
-    instance._changeCallbacks.filter((_cb) => cb !== _cb);
-  }
+    instance._changeCallbacks.filter(_cb => cb !== _cb);
+  };
 }

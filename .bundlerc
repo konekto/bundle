@@ -3,5 +3,6 @@
   "destination": "./test/tmp",
   "cwd": "./test/stubs",
   "sync": "http://localhost:8080",
-  "loader": true
+  "loader": true,
+  "storybook": true
 }

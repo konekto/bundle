@@ -4,8 +4,6 @@ const { getWebpackEntries, normalizeOptions } = require("../utils");
 const Promise = require("bluebird");
 const { resolve } = require;
 
-const nodeModulesPath = path.resolve(__dirname, "../../node_modules");
-
 const clientLoader = {
   test: /index\.jsx$/,
   exclude: /node_modules/,
