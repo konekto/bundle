@@ -2,8 +2,6 @@
 "use strict";
 
 const meow = require("meow");
-const rc = require("rc");
-const path = require("path");
 
 const { compile } = require("../src/compiler");
 const { load } = require("../src/config");
@@ -58,10 +56,6 @@ function init_cli() {
 
   let init = Promise.resolve();
 
-  if (flags.install) {
-    init = installBabelDeps();
-  }
-
   if (flags.src) {
     flags.sources = [flags.src];
   }
@@ -90,86 +84,6 @@ function init_cli() {
       close();
       console.log(err);
     });
-}
-
-function installBabelDeps() {
-  let results = [];
-  const babelDefaults = {
-    presets: [
-      [
-        "env",
-        {
-          targets: {
-            browsers: ["last 2 versions", "ie >= 11"]
-          }
-        }
-      ],
-      "react"
-    ],
-    plugins: [
-      "react-hot-loader/babel",
-      "transform-object-rest-spread",
-      "transform-export-default"
-    ]
-  };
-
-  console.log("Looking for .babelrc...");
-
-  const babelConfig = rc("babel", babelDefaults);
-
-  if (babelConfig.config === undefined) {
-    console.log("  No .babelrc found in working directory or above.");
-    console.log("  Will use defaults: ");
-    console.log("");
-    console.log(babelDefaults);
-    console.log("");
-    console.log(
-      "To make your own .babelrc, copy the following line and place it in a file in your project:"
-    );
-    console.log(JSON.stringify(babelDefaults));
-    console.log("This will also enable you to use to babel auto install");
-  } else {
-    console.log("  found: ", babelConfig.config);
-    console.log("  Ensuring babel dependencies installed:");
-
-    const babelPresets = babelConfig.presets.map(p =>
-      babelConfigToPackagename(p, "preset")
-    );
-    const babelPlugins = babelConfig.plugins.map(p =>
-      babelConfigToPackagename(p, "plugin")
-    );
-    const npm = require("npmi");
-    const targetWorkingDir = path.dirname(babelConfig.config);
-
-    console.log("  Needed dependencies: ");
-    console.log("  Will install into: ", targetWorkingDir);
-
-    const babelDeps = babelPresets.concat(babelPlugins);
-
-    results = babelDeps.map(each => {
-      console.log("   ", each);
-      return new Promise((resolve, reject) => {
-        npm({ name: each, path: targetWorkingDir }, (err, res) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          }
-          resolve(res);
-        });
-      });
-    });
-  }
-  console.log("");
-  console.log("");
-  return Promise.all(results);
-}
-
-function babelConfigToPackagename(preset, middle) {
-  let name;
-  if (Array.isArray(preset)) name = preset[0];
-  else name = preset;
-
-  return "babel-" + middle + "-" + name.split("/")[0];
 }
 
 function close() {
