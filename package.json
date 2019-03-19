@@ -11,7 +11,7 @@
     "test": "mocha",
     "start-server": "http-server -c-1 ./test/tmp",
     "docker:build": "docker build -t bundle .",
-    "docker:tag": "docker tag bundle konekto/bundle:$npm_package_version",
+    "docker:tag": "docker tag bundle konekto/bundle:$npm_package_version ",
     "docker:push": "docker push konekto/bundle:$npm_package_version"
   },
   "author": "Haithem Bel Haj <haithem@konek.to>",
