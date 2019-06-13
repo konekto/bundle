@@ -1,25 +1,25 @@
-const {compileScripts, compileStyles, compile} = require('../src/compiler');
+const { compileScripts, compileStyles, compile } = require('../src/compiler');
 const fs = require('fs');
 const assert = require('assert');
-const cp= require('child_process');
+const cp = require('child_process');
 const Promise = require('bluebird');
 
 const exec = Promise.promisify(cp.exec);
 
-describe('compiler specs', function() {
+describe('compiler specs', function () {
 
   this.timeout(6000);
 
-  beforeEach((done)=> {
+  beforeEach((done) => {
 
     exec('cp -a ./test/stubs-original/. ./test/stubs/')
       .then(exec('rm -rf ./test/tmp'))
       .then(done, done)
   })
 
-  describe('scripts', function() {
+  describe('scripts', function () {
 
-    it('should compile a jsx file', function(done) {
+    it('should compile a jsx file', function (done) {
 
       compileScripts({
         sources: ['./test.jsx'],
@@ -34,7 +34,7 @@ describe('compiler specs', function() {
         .catch(done)
     });
 
-    it('should compile using globbing', function(done) {
+    it('should compile using globbing', function (done) {
 
       compileScripts({
         sources: ['./**/*.jsx'],
@@ -51,7 +51,7 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should include scripts', function(done) {
+    it('should include scripts', function (done) {
 
       compileScripts({
         includes: ['./global.js'],
@@ -68,7 +68,7 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should watch files for changes', function(done) {
+    it('should watch files for changes', function (done) {
 
       compileScripts({
         watch: true,
@@ -76,7 +76,7 @@ describe('compiler specs', function() {
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then((instance)=> {
+        .then((instance) => {
 
           const close = instance.close.bind(instance);
 
@@ -85,22 +85,22 @@ describe('compiler specs', function() {
           replaceInFile('./test/stubs/test.jsx', 'test', 'changed');
 
           return instance.filesHasChanged
-            .then(()=> {
+            .then(() => {
 
               assert(/changed/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
 
               replaceInFile('./test/stubs/test.jsx', 'changed', 'test');
             })
-            .then(()=> instance.filesHasChanged)
-            .then(()=> {
+            .then(() => instance.filesHasChanged)
+            .then(() => {
               assert(/test/.test(fs.readFileSync('./test/stubs/test.jsx', 'utf8')));
             })
             .then(close, close)
         })
-        .then(()=> done(), done)
+        .then(() => done(), done)
     })
 
-    it('should trigger event for changes', function(done) {
+    it('should trigger event for changes', function (done) {
 
       compileScripts({
         watch: true,
@@ -116,7 +116,7 @@ describe('compiler specs', function() {
 
             counter += 1;
 
-            if(counter === 1) {
+            if (counter === 1) {
 
               return replaceInFile('./test/stubs/test.jsx', 'changed', 'test');
             }
@@ -134,16 +134,16 @@ describe('compiler specs', function() {
     })
   })
 
-  describe('styles', function() {
+  describe('styles', function () {
 
-    it('should compile a .styl file', function(done) {
+    it('should compile a .styl file', function (done) {
 
       compileStyles({
         sources: ['./test.styl', './parent/styles.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then(()=> {
+        .then(() => {
 
           assert(fs.existsSync('./test/tmp/test.css'));
           assert(fs.existsSync('./test/tmp/parent/styles.css'));
@@ -152,14 +152,14 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should compile a glob', function(done) {
+    it('should compile a glob', function (done) {
 
       compileStyles({
         sources: ['./**/*.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then(()=> {
+        .then(() => {
 
           assert(fs.existsSync('./test/tmp/test.css'));
           assert(fs.existsSync('./test/tmp/parent/styles.css'));
@@ -170,7 +170,7 @@ describe('compiler specs', function() {
     })
 
 
-    it('should include base styles', (done)=> {
+    it('should include base styles', (done) => {
 
       compileStyles({
 
@@ -179,7 +179,7 @@ describe('compiler specs', function() {
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then(()=> {
+        .then(() => {
 
           assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css')))
           done();
@@ -187,7 +187,7 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should watch files for changes', function(done) {
+    it('should watch files for changes', function (done) {
 
       compileStyles({
 
@@ -197,7 +197,7 @@ describe('compiler specs', function() {
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then((instance)=> {
+        .then((instance) => {
 
           console.log('#f00')
           assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')));
@@ -218,14 +218,14 @@ describe('compiler specs', function() {
                   console.log('#f00')
                   assert(/#f00/.test(fs.readFileSync('./test/tmp/main.css', 'utf8')))
                 })
-            }).finally(()=> instance.close())
+            }).finally(() => instance.close())
 
         })
-        .then(()=> done())
+        .then(() => done())
         .catch(done)
     })
 
-    it('should watch imported files also', (done)=> {
+    it('should watch imported files also', (done) => {
 
       compileStyles({
 
@@ -241,16 +241,16 @@ describe('compiler specs', function() {
           replaceInFile('./test/stubs/vars.styl', 'red', 'blue');
 
           return instance.filesHasChanged
-            .then(()=> assert(/#00f/.test(fs.readFileSync('./test/tmp/with-imports.css', 'utf8'))))
+            .then(() => assert(/#00f/.test(fs.readFileSync('./test/tmp/with-imports.css', 'utf8'))))
             .then(instance.close, instance.close)
         })
         .then(done, done)
     });
   })
 
-  describe('compile', function(){
+  describe('compile', function () {
 
-    it('should compile both styles and scripts', function(done) {
+    it('should compile both styles and scripts', function (done) {
 
       compile({
 
@@ -258,7 +258,7 @@ describe('compiler specs', function() {
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then((instance)=> {
+        .then((instance) => {
 
           assert(fs.existsSync('./test/tmp/parent/styles.css'));
           assert(fs.existsSync('./test/tmp/parent/index.js'));
@@ -268,7 +268,7 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should watch both styles and scripts', function(done) {
+    it('should watch both styles and scripts', function (done) {
 
       compile({
         watch: true,
@@ -276,7 +276,7 @@ describe('compiler specs', function() {
         destination: './test/tmp',
         cwd: './test/stubs'
       })
-        .then((instance)=> {
+        .then((instance) => {
 
           assert(fs.existsSync('./test/tmp/test.js'));
           assert(fs.existsSync('./test/tmp/test.css'));
@@ -284,15 +284,15 @@ describe('compiler specs', function() {
           replaceInFile('./test/stubs/test.jsx', 'test', 'changed');
 
           return instance.filesHasChanged
-            .then(()=> {
+            .then(() => {
 
               assert(/changed/.test(fs.readFileSync('./test/tmp/test.js', 'utf8')));
 
               replaceInFile('./test/stubs/test.styl', 'red', 'blue');
 
               return instance.filesHasChanged
-                .then(()=> assert(/#00f/.test(fs.readFileSync('./test/tmp/test.css', 'utf8'))))
-                .then(()=> instance.close(), ()=> instance.close())
+                .then(() => assert(/#00f/.test(fs.readFileSync('./test/tmp/test.css', 'utf8'))))
+                .then(() => instance.close(), () => instance.close())
                 .then(done)
 
             })
@@ -301,19 +301,37 @@ describe('compiler specs', function() {
         .catch(done)
     })
 
-    it('should use the loaders', function(done) {
+    it('should use the loader for styles ', function (done) {
 
       compile({
         loader: true,
-        sources: ['./parent/styles.styl', './parent/client.jsx'],
+        sources: ['./parent/styles.styl'],
         destination: './test/tmp',
         cwd: './test/stubs'
       })
         .then(() => {
 
-          assert(fs.existsSync('./test/tmp/parent/client.js'))
           assert(fs.existsSync('./test/tmp/parent/styles.css'))
           assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/styles.css', 'utf8')))
+
+          done();
+        })
+        .catch(done)
+    })
+
+    it('should use the loader for scripts ', function (done) {
+
+      compile({
+        loader: true,
+        sources: ['./parent/index.jsx'],
+        destination: './test/tmp',
+        cwd: './test/stubs'
+      })
+        .then(() => {
+
+          assert(fs.existsSync('./test/tmp/parent/index.js'))
+          assert(fs.existsSync('./test/tmp/parent/index.css'))
+          assert(/\.child/.test(fs.readFileSync('./test/tmp/parent/index.css', 'utf8')))
 
           done();
         })
@@ -329,9 +347,9 @@ function replaceInFile(file, from, to) {
 
   console.log('replace');
 
-  setTimeout(()=> {
+  setTimeout(() => {
 
-    fs.writeFile(file, content.replace(from, to), (err)=> {
+    fs.writeFile(file, content.replace(from, to), (err) => {
 
       console.log('replaced');
     });

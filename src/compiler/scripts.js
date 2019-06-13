@@ -3,6 +3,7 @@ const webpack = require("../webpack");
 const { getWebpackEntries, normalizeOptions } = require("../utils");
 const Promise = require("bluebird");
 const { resolve } = require;
+const styles = require('./styles');
 
 const clientLoader = {
   test: /index\.jsx$/,
@@ -47,7 +48,11 @@ function getWebpackConfig(options) {
 
   const entries = getWebpackEntries(options, "js");
 
+  const styleConfig = styles.getWebpackConfig({ ...options, loader: false });
+
   const clientLoaders = loader ? [clientLoader] : [];
+  const styleRules = loader ? styleConfig.module.rules : [];
+  const plugins = loader ? styleConfig.plugins : [];
 
   console.log("");
   console.log("Generating scripts webpack config...");
@@ -77,9 +82,10 @@ function getWebpackConfig(options) {
             cacheDirectory: true,
           }
         },
-        ...clientLoaders
+        ...clientLoaders,
+        ...styleRules
       ]
     },
-    plugins: []
+    plugins
   };
 }

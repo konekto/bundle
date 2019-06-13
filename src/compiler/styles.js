@@ -1,8 +1,8 @@
 const path = require('path');
 const webpack = require('../webpack');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const {getWebpackEntries, getIncludeFiles, normalizeOptions} = require('../utils');
-const {resolve} = require;
+const { getWebpackEntries, getIncludeFiles, normalizeOptions } = require('../utils');
+const { resolve } = require;
 
 
 const styleLoader = {
@@ -20,7 +20,7 @@ function compileStyles(options) {
 
 function getWebpackConfig(options) {
 
-  const {destination, mode, loader, cwd, sync} = normalizeOptions(options);
+  const { destination, mode, loader, cwd, sync } = normalizeOptions(options);
   const entries = getWebpackEntries(options, 'css');
 
   const plugins = [
@@ -31,7 +31,13 @@ function getWebpackConfig(options) {
 
   const styleLoaders = loader ? [styleLoader] : [];
 
-  const uses = [MiniCssExtractPlugin.loader];
+  const uses = [{
+    loader: MiniCssExtractPlugin.loader,
+    options: {
+      hmr: mode === 'development',
+      reloadAll: true,
+    }
+  },];
 
   console.log("");
   console.log('Generating styles webpack config...');
