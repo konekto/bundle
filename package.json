@@ -27,6 +27,7 @@
     "@babel/polyfill": "^7.2.5",
     "@babel/preset-env": "^7.3.4",
     "@babel/preset-react": "^7.0.0",
+    "@konekto/preset-react": "^1.1.0",
     "@storybook/addon-actions": "^4.1.13",
     "@storybook/addon-console": "^1.1.0",
     "@storybook/addon-viewport": "^4.1.13",

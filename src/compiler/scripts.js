@@ -11,25 +11,6 @@ const clientLoader = {
   loader: path.resolve(__dirname, "./loaders/client.js")
 };
 
-const babelLoaderConfig = {
-  presets: [
-    [
-      resolve("@babel/preset-env"),
-      {
-        targets: {
-          browsers: ["last 2 versions", "ie >= 11"]
-        }
-      }
-    ],
-    resolve("@babel/preset-react")
-  ],
-  plugins: [
-    resolve("react-hot-loader/babel"),
-    resolve("@babel/plugin-proposal-export-default-from"),
-    resolve("@babel/plugin-proposal-object-rest-spread")
-  ]
-};
-
 // exports
 module.exports = compileScripts;
 module.exports.getWebpackConfig = getWebpackConfig;
@@ -78,7 +59,9 @@ function getWebpackConfig(options) {
           exclude: /node_modules/,
           loader: resolve("babel-loader"),
           options: {
-            ...babelLoaderConfig,
+            presets: [
+              resolve("@konekto/preset-react")
+            ],
             cacheDirectory: true,
           }
         },
