@@ -16,8 +16,7 @@ Configure babel with your `.babelrc` and your good to go.
 ```js
 {
   "cwd": "./src" , //parent folder of the sources
-  "destination": "./build" //destination folder, relative to working dir of
-  bundle/index.js call
+  "destination": "./build" //destination folder, relative to working dir of bundle/index.js call
   "sources": ["**/*.jsx", "**/*.styl"], //source glogs to compile relative to cwd,
   "watch": true, //watch files,
   "loader": true, //activate auto component loader
