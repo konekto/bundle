@@ -27,7 +27,6 @@ function init_cli() {
 			--loader activate loader
 			--log show logs
 			--cwd set cwd
-			--install install babel deps
 			--dest destination path
       --src source glob
       --storybook load storybook 
@@ -38,7 +37,6 @@ function init_cli() {
 	`,
     {
       alias: {
-        i: "install",
         c: "config",
         l: "loader",
         w: "watch",
@@ -87,8 +85,7 @@ function init_cli() {
 }
 
 function close() {
-  console.log("Closing instance explicityly.");
-
+  console.log("Closing instance explicity.");
   instance && instance.close && instance.close();
 }
 
