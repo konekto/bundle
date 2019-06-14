@@ -74,7 +74,8 @@ function getWebpackEntries(options, extension) {
   sourcefiles.forEach(file => {
     const { dir, name } = path.parse(file);
 
-    const key = path.relative(cwd, dir) + "/" + name;
+    const rel = path.relative(cwd, dir);
+    const key = rel ? rel + '/' + name : name;
     const files = includeFiles.length ? [...includeFiles, file] : [file];
 
     if (extension === "js") {
