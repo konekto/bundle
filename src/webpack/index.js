@@ -2,8 +2,15 @@ const Promise = require("bluebird");
 const webpack = require("webpack");
 const browserSync = require("../sync");
 
+
+const hotPlugins = [
+  new webpack.NamedModulesPlugin(),
+  new webpack.HotModuleReplacementPlugin()
+];
+
 // export
 module.exports = _webpack;
+module.exports.hotPlugins = hotPlugins;
 
 function _webpack(config, options) {
   const { log, mode, watch, sync, destination } = options;
@@ -11,18 +18,18 @@ function _webpack(config, options) {
   let watching;
   let taskFn;
 
-  const hotPlugins = sync
+  const plugins = sync
     ? [
-        new webpack.NamedModulesPlugin(),
-        new webpack.HotModuleReplacementPlugin()
-      ]
+      new webpack.NamedModulesPlugin(),
+      new webpack.HotModuleReplacementPlugin()
+    ]
     : [];
 
   config = Array.isArray(config) ? config : [config];
 
   config.forEach(conf => {
     conf.plugins = [
-      ...hotPlugins,
+      ...plugins,
       ...conf.plugins,
       new webpack.DefinePlugin({
         NODE_ENV: JSON.stringify(mode)
