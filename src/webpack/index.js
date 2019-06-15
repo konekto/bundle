@@ -13,7 +13,7 @@ module.exports = _webpack;
 module.exports.hotPlugins = hotPlugins;
 
 function _webpack(config, options) {
-  const { log, mode, watch, sync, destination } = options;
+  const { log, mode, watch, sync } = options;
 
   let watching;
   let taskFn;
@@ -33,6 +33,9 @@ function _webpack(config, options) {
       ...conf.plugins,
       new webpack.DefinePlugin({
         NODE_ENV: JSON.stringify(mode)
+      }),
+      new webpack.LoaderOptionsPlugin({
+        debug: true
       })
     ];
   });

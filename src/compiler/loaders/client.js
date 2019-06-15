@@ -2,31 +2,39 @@ const path = require('path');
 const fs = require('fs');
 const replaceRegexp = /index\.jsx/g;
 
+
 /**
  * simple View Preloader that loads the client files instead of the server files
  * @param content
  * @returns {*}
  */
 
-
-module.exports = function viewPreloader(content) {
+module.exports = function clientLoader(content) {
 
   this.cacheable();
-
   const callback = this.async();
-  const stylePath = path.resolve(this.context, 'styles.styl');
 
-  exists(stylePath)
-    .then((loadStyle) => {
-
-      if (loadStyle) {
-        content = `require("${stylePath}")\n` + content;
-      }
-
-      callback(null, content.replace(replaceRegexp, 'client.jsx'))
-    })
+  loader(this, content)
+    .then((c) => callback(null, c))
+    .catch(callback);
 };
 
+async function loader(ctx, content) {
+
+  return await addStyle(ctx, content.replace(replaceRegexp, 'client.jsx'))
+}
+
+async function addStyle(ctx, content) {
+
+  const { context } = ctx;
+  const stylePath = path.resolve(context, 'styles.styl');
+
+  const styleExists = await exists(stylePath);
+
+  if (!styleExists) return content;
+
+  return `require("${stylePath}")\n` + content;
+}
 
 function exists(file) {
 
@@ -38,3 +46,4 @@ function exists(file) {
     })
   })
 }
+

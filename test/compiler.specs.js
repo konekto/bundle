@@ -319,7 +319,7 @@ describe('compiler specs', function () {
         .catch(done)
     })
 
-    it('should use the loader for scripts ', function (done) {
+    it.only('should use the loader for scripts ', function (done) {
 
       compile({
         loader: true,
