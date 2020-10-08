@@ -23,7 +23,7 @@
   "dependencies": {
     "@babel/core": "^7.3.4",
     "@babel/polyfill": "^7.2.5",
-    "@konekto/preset-react": "^1.1.0",
+    "@konekto/preset-react": "^1.2.0",
     "@storybook/addon-actions": "^4.1.13",
     "@storybook/addon-console": "^1.1.0",
     "@storybook/addon-viewport": "^4.1.13",
